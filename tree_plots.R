@@ -11,7 +11,7 @@ library(tidytree)
 
 # use newick files in order to be able to easily add posteriors to your chart
 #use phytools, not the read.nexus or newick functions from ape. Liam did a thing which preserves the data we want to plot!
-hosttree3 <- phytools::read.newick("hosttree.newick")
+hosttree <- phytools::read.newick("hosttree.newick")
 woltree <- phytools::read.newick("MCca_comb10%_fjWol.newick")
 
 # Sometimes it doesn't preserve the data though :(
@@ -31,6 +31,7 @@ make_phylo_class <- function(treedata = hosttree){
   return(tree)
 }
 
+hosttree1 <- make_phylo_class()
 #remember to change the class!!
 class(hosttree) <- "phylo"
 
@@ -80,29 +81,43 @@ drop.tip(
 
 nodelabels(hosttree$trees)
 
-# Shaded star tips are actually trees that are class "backbonePhylo"
+#check node numbers you would like to collapse
+setEPS()
+postscript("woltree.eps", width = 50, height = 100)
+ node.num <- plotTree(woltree, node.numbers= TRUE)
+dev.off()
 
-#list the labels for each clade
-clade.label <- c("Strain_1", "strain_2","strain_3","strain_4")
-tip.label <- c("17FJwol196", "KP208728wsp", "BP172 consensus", "JQ414026_98wsp")
-nodes <- c(170, 149, 143, 135)
+#check posteriors to determine
+setEPS()
+postscript("woltree_edge.eps", width = 100, height = 100)
+plot(woltree)
+nodelabels(woltree$edge.length)
+dev.off()
 
 Backbone <-
   function(tree = tree,
            clade.label = NA,
-           nodes = NA,
-           tip.label = NA,
-           triangle_depth = 0.5
+           triangle_depth = 0.5,
+           threshold = 0.1,
+           min_edge_length = 0.0005
             ){
 
-    #if your tree has many small nodes that need to be collapsed prematurely so the correct number of descendants are selected use this:
-    tree <- collapse.to.star(tree, nodes)
-    #make tree backbone
+    #find the nodes to collapse, based on the minimum required posterior probability to determine a real relationship
+     P_list <- as.numeric(tree$node.label) >= threshold & tree$edge.length >= min_edge_length
+     nodes <- which(P_list == TRUE)
+     print(paste(length(nodes), "nodes in backbone, remaining ",
+                 tree$Nnode-length(nodes), "nodes to be collapsed"))
+     #find  the relevant tip labels  and number of species
+
 
     #get the number of species
     N_sample <- c(rep(NA, length(nodes)))
+    tip.label <- c(rep(NA, length(nodes)))
     for(i in 1:length(nodes)){
-      N_sample[i] <- length(getDescendants(woltree, node = nodes[i]))
+      decs <- getDescendants(woltree, node = nodes[i])
+      N_sample[i] <- length(decs)
+      tip.label[i] <-  tree$tip.label[decs[1]]
+      clade.label[i] <- tree$tip.label[decs[1]] #you can change these later
     }
 
     # get the star tips
@@ -113,16 +128,16 @@ Backbone <-
     trans <- data.frame(tip.label,
                         clade.label,
                         N_sample,
-                        depths)
+                        depth)
+    return(trans)
 
     newtree <- phylo.toBackbone(tree, trans = trans)
     return(newtree)
   }
 
 wol_tree <- Backbone(tree = woltree,
-                      clade.label = clade.label,
-                      nodes = nodes,
-                      tip.label = tip.label)
+                     triangle_depth = 1,
+                     threshold = 0.6)
 ###### before final plot ####
 
 ### colour tree branches by species ###
@@ -215,8 +230,10 @@ format(X, scientific = FALSE)
 dev.off()
 
 #### Haplotype map ####
-
 ### load fasta ###
+
+##### Extract sub tree #####
+
 ### get haplotypes ###
 h <- haplotype()
 d <- dist.dna(h, "N")
