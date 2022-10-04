@@ -27,25 +27,23 @@ make_phylo_class <- function(treedata = hosttree){
        tip.label = treedata@phylo[["tip.label"]],
        edge.length = treedata@phylo[["edge.length"]],
        node.label = treedata@data[["posterior"]])
-
+ class(tree) <- "phylo"
   return(tree)
 }
 
-hosttree1 <- make_phylo_class()
-#remember to change the class!!
-class(hosttree) <- "phylo"
+hostree <- make_phylo_class()
 
-# if you already loaded the God damned tree with an empty node.lable section can do this as well.
+# if you already loaded the God damned tree with an empty node.label section can do this as well.
 hosttree3$node.label <- hosttree4@data[["posterior"]]
 
 ##### prep trees #####
 
 ### Look at trees in their raw form first to know what to do  ###
-plot(woltree1)
+plot(woltree)
  nodelables()
  ###### make trees ####
 
- cophy <- cophylo(woltree, hosttree, assoc = assoc_1)
+cophy <- cophylo(woltree, hosttree, assoc = assoc_1)
 ###### initial plot ####
 setEPS()
 postscript("output.eps", width = 50, height = 70)
@@ -63,6 +61,7 @@ dev.off()
 nodelables.cophylo()
 
 ###### drop tips ####
+
 drop.tip(
   phy,
   tip,
@@ -73,9 +72,7 @@ drop.tip(
   collapse.singles = TRUE,
   interactive = FALSE
 )
-# keep.tip(phy, tip)
-# extract.clade(phy, node, root.edge = 0, collapse.singles = TRUE,
-#               interactive = FALSE)
+
 
 
 
@@ -94,6 +91,10 @@ plot(woltree)
 nodelabels(woltree$edge.length)
 dev.off()
 
+#' @param tree Tree data data
+#' @param clade.label  if NA, clade labels will be automatically assigned
+#' @param triangle_depth the proportion of the edge length that will be part of the triangle
+#' @param min_edge_length the minimum edge length of branches that should be kept in the backbone
 Backbone <-
   function(tree = tree,
            clade.label = NA,
@@ -106,24 +107,24 @@ Backbone <-
      P_list <- as.numeric(tree$node.label) >= threshold & tree$edge.length >= min_edge_length
      nodes <- which(P_list == TRUE)
      print(paste(length(nodes), "nodes in backbone, remaining ",
-                 tree$Nnode-length(nodes), "nodes to be collapsed"))
-     #find  the relevant tip labels  and number of species
+                 tree$Nnode-length(nodes), "nodes to be collapsed."))
 
-
-    #get the number of species
+    #get the number of species, the relevant tip labels, and number of species
     N_sample <- c(rep(NA, length(nodes)))
     tip.label <- c(rep(NA, length(nodes)))
     for(i in 1:length(nodes)){
       decs <- getDescendants(woltree, node = nodes[i])
+      #print(decs)
       N_sample[i] <- length(decs)
-      tip.label[i] <-  tree$tip.label[decs[1]]
-      clade.label[i] <- tree$tip.label[decs[1]] #you can change these later
+      tip.label[i] <-  tree$tip.label[decs[2]]
+      clade.label[i] <- tree$tip.label[decs[2]] # we can change these later
     }
-
+    #print(tip.label)
     # get the star tips
     depth <-vapply(tip.label,function(x,y)
       triangle_depth*y$edge.length[which(tree$edge[,2]==which(y$tip.label==x))],
       y=tree, numeric(1))
+
 
     trans <- data.frame(tip.label,
                         clade.label,
@@ -136,10 +137,12 @@ Backbone <-
   }
 
 wol_tree <- Backbone(tree = woltree,
-                     triangle_depth = 1,
-                     threshold = 0.6)
+                     triangle_depth = 0.5,
+                     threshold = 1)
 ###### before final plot ####
-
+#' @param tree input tree file
+#' @param colours branch colours
+#' @param node_labs node labels to start colour change
 ### colour tree branches by species ###
 colour_branches <-
   function(tree = cophy,
@@ -158,8 +161,10 @@ colour_branches <-
     }
     return(side)
   }
-
-
+#'@param tree input tree
+#'@param assoc_link the column name in the associations data frame you would like to draw the links to colour from
+#'@param names The specific names for the associated links to be drawn from
+#'@param colours The colours you wish to specify
 colour_links <-
   function(tree = cophy,
            assoc_link = "Host",
