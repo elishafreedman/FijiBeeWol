@@ -23,11 +23,11 @@ hosttree <- treeio::read.beast("MCCA_EF1a2_COI2nd_nameChangeEdit.nex")
 
 make_phylo_class <- function(treedata = hosttree){
   tree <- list(edge =  treedata@phylo[["edge"]],
-       Nnode = treedata@phylo[["Nnode"]],
-       tip.label = treedata@phylo[["tip.label"]],
-       edge.length = treedata@phylo[["edge.length"]],
-       node.label = treedata@data[["posterior"]])
- class(tree) <- "phylo"
+               Nnode = treedata@phylo[["Nnode"]],
+               tip.label = treedata@phylo[["tip.label"]],
+               edge.length = treedata@phylo[["edge.length"]],
+               node.label = treedata@data[["posterior"]])
+  class(tree) <- "phylo"
   return(tree)
 }
 
@@ -40,8 +40,8 @@ hosttree3$node.label <- hosttree4@data[["posterior"]]
 
 ### Look at trees in their raw form first to know what to do  ###
 plot(woltree)
- nodelables()
- ###### make trees ####
+nodelables()
+###### make trees ####
 
 cophy <- cophylo(woltree, hosttree, assoc = assoc_1)
 ###### initial plot ####
@@ -49,7 +49,7 @@ setEPS()
 postscript("output.eps", width = 50, height = 70)
 plot(cophy)
 
- #display node lables
+#display node lables
 nodelabels.cophylo(which = "left")
 edgelabels.cophylo(which = "left")
 
@@ -81,7 +81,7 @@ nodelabels(hosttree$trees)
 #check node numbers you would like to collapse
 setEPS()
 postscript("woltree.eps", width = 50, height = 100)
- node.num <- plotTree(woltree, node.numbers= TRUE)
+node.num <- plotTree(woltree, node.numbers= TRUE)
 dev.off()
 
 #check posteriors to determine
@@ -101,14 +101,14 @@ Backbone <-
            triangle_depth = 0.5,
            threshold = 0.1,
            min_edge_length = 0.0005
-            ){
-
+  ){
+    
     #find the nodes to collapse, based on the minimum required posterior probability to determine a real relationship
-     P_list <- as.numeric(tree$node.label) >= threshold & tree$edge.length >= min_edge_length
-     nodes <- which(P_list == TRUE)
-     print(paste(length(nodes), "nodes in backbone, remaining ",
-                 tree$Nnode-length(nodes), "nodes to be collapsed."))
-
+    P_list <- as.numeric(tree$node.label) >= threshold & tree$edge.length >= min_edge_length
+    nodes <- which(P_list == TRUE)
+    print(paste(length(nodes), "nodes in backbone, remaining ",
+                tree$Nnode-length(nodes), "nodes to be collapsed."))
+    
     #get the number of species, the relevant tip labels, and number of species
     N_sample <- c(rep(NA, length(nodes)))
     tip.label <- c(rep(NA, length(nodes)))
@@ -124,14 +124,14 @@ Backbone <-
     depth <-vapply(tip.label,function(x,y)
       triangle_depth*y$edge.length[which(tree$edge[,2]==which(y$tip.label==x))],
       y=tree, numeric(1))
-
-
+    
+    
     trans <- data.frame(tip.label,
                         clade.label,
                         N_sample,
                         depth)
     return(trans)
-
+    
     newtree <- phylo.toBackbone(tree, trans = trans)
     return(newtree)
   }
