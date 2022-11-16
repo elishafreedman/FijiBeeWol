@@ -118,7 +118,7 @@ colour_branches <-
 
 
 colour_links <-
-  function(tree = cophy,
+  function(tree = cophylo,
            assoc_link = "Host",
            names = c(
              "Homalictus_concavus",
