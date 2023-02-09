@@ -5,7 +5,7 @@
 #### 0.0 Prep ####
   ##### 0.1 Paths ####
 # Choose the path to the root folder in which all other folders can be found (or made by dirMaker)
-RootPath <- "/Users/jamesdorey/Desktop/Uni/My_papers/Elisha_Hons_paper/FST"
+RootPath <- "/Users/jamesdorey/Desktop/Uni/My_papers/Elisha_Hons_paper/Honours/Dorey_script"
 # Set the working directory
 setwd(RootPath)
 # Install reenv, IF NEEDED
@@ -132,8 +132,49 @@ OccData <- readr::read_csv(paste0(RootPath, "/HomalictusCollectionData_2018.csv"
   dplyr::rename(
     decimalLongitude = Longitude,
     decimalLatitude = Latitude)
+wolbachiaSpecies = readr::read_csv("wolbachiaSpecies.csv")
 
-##### 2.2 Map with species ####
+
+  ##### 2.2 Raster maps ####
+source(paste0(RootPath, "/FjRasterPointMapR.R"))
+FjRasterPointMapR(
+  mapData = OccData,
+  wolSp = wolbachiaSpecies$homaSp,
+  #spColours = NULL,
+  filename = "rast_FijiHoma_noSpecies.pdf",
+  outpath = RootPath,
+  width = 7, height = 7, units = "in",
+  dpi = 300,
+  
+  # Map extent — for the raster this is in Fiji 1986 projection (hence the large numbers)
+  yLimInput = c(3591385-80000, 4062964+30000),
+  xLimInput = c(1871432- 70000, 2298672 + 1.0),
+  yLimBreaks = NULL,
+  bg = "white", device = "pdf",
+  # Inset extent — This is in WGS 84 projection (hence the 360º numbers)
+  insetYLim = c(-45, -10), 
+  insetXLim = c(145,190),
+  #inset size
+  insetX = 0.2, 
+  insetY = 0.08,
+  insetWidth = 0.35, 
+  insetHeight = 0.35,
+  
+  # OPTIONAL:
+  pointCol = "#252525",
+  wolColour = "#54278f",
+  # Raster colours
+  naMapCol = "aliceblue",
+  rasterGradient = "ggthemes::Blue",
+  # 1 or -1 to change directions
+  colourDirection = -1,
+  # point alpha (opacity)
+  mapAlpha = 0.7,
+  mapTitle = "Fijian Homalictus occurrences")
+
+
+##### 2.3 OLD vector maps ####
+  ###### a. species-level ####
   # Load in the mapping function
 source(paste0(RootPath, "/FjPointMapR.R"))
   # With species coloured
@@ -172,7 +213,7 @@ FjPointMapR(
   jitterValue = NULL)
 
 
-##### 2.2 Map simple points ####
+###### b. all individuals ####
 # WithOUT species coloured
 # Load in the mapping function
 source(paste0(RootPath, "/FjPointMapR.R"))
@@ -212,46 +253,7 @@ FjPointMapR(
   jitterValue = NULL)
 
 
-#### RASTER ####
-wolbachiaSpecies = readr::read_csv("wolbachiaSpecies.csv")
-source(paste0(RootPath, "/FjRasterPointMapR.R"))
-FjRasterPointMapR(
-    mapData = OccData,
-    wolSp = wolbachiaSpecies$homaSp,
-    #spColours = NULL,
-    filename = "rast_FijiHoma_noSpecies.pdf",
-    outpath = RootPath,
-    width = 7, height = 7, units = "in",
-    dpi = 300,
-    
-    # Map extent — for the raster this is in Fiji 1986 projection (hence the large numbers)
-    yLimInput = c(3591385-80000, 4062964+30000),
-    xLimInput = c(1871432- 70000, 2298672 + 1.0),
-    yLimBreaks = NULL,
-    bg = "white", device = "pdf",
-    # Inset extent — This is in WGS 84 projection (hence the 360º numbers)
-    insetYLim = c(-45, -10), 
-    insetXLim = c(145,190),
-    #inset size
-    insetX = 0.2, 
-    insetY = 0.08,
-    insetWidth = 0.35, 
-    insetHeight = 0.35,
-    
-    # OPTIONAL:
-    pointCol = "#252525",
-    wolColour = "#54278f",
-      # Raster colours
-    naMapCol = "aliceblue",
-    rasterGradient = "ggthemes::Blue",
-      # 1 or -1 to change directions
-    colourDirection = -1,
-      # point alpha (opacity)
-    mapAlpha = 0.7,
-    mapTitle = "Fijian Homalictus occurrences")
-
   
   
-paletteer::scale_colour_paletteer_c("ggthemes::Red-Blue Diverging")
 
 

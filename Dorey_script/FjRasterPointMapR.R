@@ -5,6 +5,7 @@
 
 FjRasterPointMapR <- function(
     mapData = NULL,
+    wolSp = NULL,
     #spColours = NULL,
     filename = NULL,
     outpath = NULL,
