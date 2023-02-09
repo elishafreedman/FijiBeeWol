@@ -135,15 +135,27 @@ OccData <- readr::read_csv(paste0(RootPath, "/HomalictusCollectionData_2018.csv"
 wolbachiaSpecies = readr::read_csv("wolbachiaSpecies.csv")
 
 
+# Create the points file
+fijiPoints <- OccData %>% 
+  dplyr::mutate(wolStatus = dplyr::if_else(Specimen_code %in% wolbachiaSpecies$homaSp,
+                                           "Wolbachia", "Unknown")) %>%
+  tidyr::drop_na(c(decimalLongitude, decimalLatitude)) %>%
+  dplyr::mutate(decimalLongitude = as.numeric(decimalLongitude),
+                decimalLatitude = as.numeric(decimalLatitude)) %>%
+  sf::st_as_sf(coords = c("decimalLongitude", "decimalLatitude")) %>%
+  # Set the right CRS
+  sf::st_set_crs(terra::crs("EPSG:4326")) %>%
+  #terra::vect(geom = c("decimalLongitude", "decimalLatitude")) %>%
+  sf::st_transform(., crs = terra::crs("EPSG:3460"))
+
   ##### 2.2 Raster maps ####
 source(paste0(RootPath, "/FjRasterPointMapR.R"))
 FjRasterPointMapR(
-  mapData = OccData,
-  wolSp = wolbachiaSpecies$homaSp,
+  mapData = fijiPoints,
   #spColours = NULL,
   filename = "rast_FijiHoma_noSpecies.pdf",
   outpath = RootPath,
-  width = 7, height = 7, units = "in",
+  width = 6, height = 6, units = "in",
   dpi = 300,
   
   # Map extent — for the raster this is in Fiji 1986 projection (hence the large numbers)
@@ -155,21 +167,24 @@ FjRasterPointMapR(
   insetYLim = c(-45, -10), 
   insetXLim = c(145,190),
   #inset size
-  insetX = 0.2, 
-  insetY = 0.08,
+  insetX = 0.1, 
+  insetY = 0.1,
   insetWidth = 0.35, 
   insetHeight = 0.35,
   
   # OPTIONAL:
-  pointCol = "#252525",
-  wolColour = "#54278f",
+  ptSize = 1.5,
+  pchAll = 19,
+     # background point and wolbachia point oclours
+    colPts = "black",
+    colWol = "white",
   # Raster colours
   naMapCol = "aliceblue",
   rasterGradient = "ggthemes::Blue",
   # 1 or -1 to change directions
   colourDirection = -1,
   # point alpha (opacity)
-  mapAlpha = 0.7,
+  mapAlpha = 0.8,
   mapTitle = "Fijian Homalictus occurrences")
 
 

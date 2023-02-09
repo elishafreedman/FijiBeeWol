@@ -5,7 +5,6 @@
 
 FjRasterPointMapR <- function(
     mapData = NULL,
-    wolSp = NULL,
     #spColours = NULL,
     filename = NULL,
     outpath = NULL,
@@ -16,7 +15,7 @@ FjRasterPointMapR <- function(
     xLimInput = c(180 - 5, 180 + 6),
     yLimBreaks = NULL,
     bg = "white", device = "pdf",
-    size = 1,
+    ptSize = 2,
     # Inset extent
     insetYLim = c(-45, -10), 
     insetXLim = c(145,190),
@@ -27,6 +26,13 @@ FjRasterPointMapR <- function(
     insetHeight = NULL,
     
     # OPTIONAL:
+    # background points
+  ringPts = "black",
+  colPts = "#bebada",
+  pchAll = 19,
+# Wolbachia Points
+  ringWol = "white",
+  colWol = "#e41a1c",
     pointCol = NULL,
     rasterGradient = terrain.colors(10),
     colourDirection = 1,
@@ -101,21 +107,7 @@ FjRasterPointMapR <- function(
   FijiMap <- terra::merge(FijiRastWest, FijiRastEast) 
   
   ##### 1.2 Point data ####
-  
-  # Create the points file
-  fijiPoints <- mapData %>% 
-    tidyr::drop_na(c(decimalLongitude, decimalLatitude)) %>%
-    dplyr::mutate(decimalLongitude = as.numeric(decimalLongitude),
-                  decimalLatitude = as.numeric(decimalLatitude)) %>%
-    sf::st_as_sf(coords = c("decimalLongitude", "decimalLatitude")) %>%
-    # Set the right CRS
-    sf::st_set_crs(terra::crs("EPSG:4326")) %>%
-    #terra::vect(geom = c("decimalLongitude", "decimalLatitude")) %>%
-    sf::st_transform(., crs = terra::crs("EPSG:3460"))
-  
-  wolPoints <- fijiPoints %>%
-    dplyr::filter(Specimen_code %in% wolSp)
-  
+
   # Reproject the Fiji 1986 extent to WGS84 for the inset
   WGS84extent <- sf::st_bbox(c(xmin = xLimInput[1], xmax = xLimInput[2], 
                                ymin = yLimInput[1], ymax = yLimInput[2]),
@@ -133,7 +125,13 @@ FjRasterPointMapR <- function(
                                             stringr::str_detect(point, "^x"),
                                           coords + 360,
                                           coords)  )
-    
+  
+    # Set the order of points
+  mapData <- mapData %>%
+    dplyr::arrange(wolStatus %>% desc()) %>%
+    dplyr::mutate(wolStatus = wolStatus %>% 
+                    factor(levels = c("Unknown", "Wolbachia"),
+                           ordered = TRUE))
   
   #### 2.0 Map ####
   
@@ -147,14 +145,13 @@ FjRasterPointMapR <- function(
                             na.value = NA, aesthetics ="fill") + 
      labs(fill = "m asl")+ 
     xlim(xLimInput) + ylim(yLimInput) +
-    geom_sf(data = fijiPoints,
+      # POINTS
+    geom_sf(data = mapData, aes(colour = factor(wolStatus)),
             #mapping = aes(x = "decimalLongitude", y = "decimalLatitude"),
-            alpha = mapAlpha, size = size,
-            col = pointCol) +
-    geom_sf(data = wolPoints,
-            #mapping = aes(x = "decimalLongitude", y = "decimalLatitude"),
-            alpha = mapAlpha, size = size,
-            col = wolColour) +
+            alpha = mapAlpha, size = ptSize, shape = pchAll) +
+     scale_color_manual("Wolbachia status", values = c(colPts, colWol), 
+                        labels = c("Unknown", "Infected")) +
+    # scale_shape_manual(values = c(pchPts, pchWol)) +
     # Map formatting
     # Add in the map's north arrow
     theme(panel.grid.major = element_line(color = gray(.1, alpha = 0.1), 
@@ -171,7 +168,7 @@ FjRasterPointMapR <- function(
    )
 
   
-  ##### 2.2 Inset map ####
+   ##### 2.2 Inset map ####
   
   (plotInset <- ggplot(data = worldmap, aes(x = long, y = lat, group = group)) +
      # Plot base polygons
