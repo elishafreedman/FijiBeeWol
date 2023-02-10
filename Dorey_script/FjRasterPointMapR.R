@@ -130,7 +130,7 @@ FjRasterPointMapR <- function(
   mapData <- mapData %>%
     dplyr::arrange(wolStatus %>% desc()) %>%
     dplyr::mutate(wolStatus = wolStatus %>% 
-                    factor(levels = c("Unknown", "Wolbachia"),
+                    factor(levels = c("Unknown", "Infected"),
                            ordered = TRUE))
   
   #### 2.0 Map ####
@@ -149,8 +149,9 @@ FjRasterPointMapR <- function(
     geom_sf(data = mapData, aes(colour = factor(wolStatus)),
             #mapping = aes(x = "decimalLongitude", y = "decimalLatitude"),
             alpha = mapAlpha, size = ptSize, shape = pchAll) +
-     scale_color_manual("Wolbachia status", values = c(colPts, colWol), 
-                        labels = c("Unknown", "Infected")) +
+     scale_color_manual("Wolbachia status", values = c(colWol,colPts),
+                        breaks = c("Infected", "Unknown"),
+                        labels = c("Infected", "Unknown")) +
     # scale_shape_manual(values = c(pchPts, pchWol)) +
     # Map formatting
     # Add in the map's north arrow
@@ -159,8 +160,14 @@ FjRasterPointMapR <- function(
           panel.border = element_rect(color = gray(.1, alpha = 1), 
                                       linetype = "solid", linewidth = 0.5,
                                       fill = NA), # add panel border
-          panel.background = element_rect(fill = "aliceblue") ,
-          plot.title = element_text(face = "italic"))+ # Add background — colour in the ocean
+          panel.background = element_rect(fill = naMapCol),
+          plot.title = element_text(face = "italic"),
+            # legend background colour
+          legend.key = element_rect(fill = paletteer::paletteer_c(rasterGradient, n = 256,
+                                                                    direction = colourDirection)[256/1.2])) + # Add background — colour in the ocean
+      # Legend order
+     guides(shape = guide_legend(order = 2), 
+            col = guide_legend(order = 1, override.aes = list(alpha = 1))) +
     # Add in X and Y labels; 1 or -1
     xlab("Longitude") + ylab("Latitude") + 
     # Add in the title
@@ -182,8 +189,10 @@ FjRasterPointMapR <- function(
      geom_rect(
        aes(xmin = WGS84extent2$coords[1], xmax = WGS84extent2$coords[2], 
            ymin = WGS84extent2$coords[3], ymax = WGS84extent2$coords[4]), fill = 'transparent', 
-       col = "red", linewidth = 1
+       col = "red", linewidth = 0.4
      ) +
+     # Add in X and Y labels; 1 or -1
+     xlab("Lon") + ylab("Lat") + 
      theme(
        panel.background = element_rect(fill='white', color=NA),
        plot.background = element_rect(fill = "transparent",colour = NA),

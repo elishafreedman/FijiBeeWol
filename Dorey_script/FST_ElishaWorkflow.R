@@ -138,7 +138,7 @@ wolbachiaSpecies = readr::read_csv("wolbachiaSpecies.csv")
 # Create the points file
 fijiPoints <- OccData %>% 
   dplyr::mutate(wolStatus = dplyr::if_else(Specimen_code %in% wolbachiaSpecies$homaSp,
-                                           "Wolbachia", "Unknown")) %>%
+                                           "Infected", "Unknown")) %>%
   tidyr::drop_na(c(decimalLongitude, decimalLatitude)) %>%
   dplyr::mutate(decimalLongitude = as.numeric(decimalLongitude),
                 decimalLatitude = as.numeric(decimalLatitude)) %>%
