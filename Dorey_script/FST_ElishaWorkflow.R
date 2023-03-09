@@ -63,7 +63,8 @@ FjHoma <- apex::read.multiFASTA("2018_Fiji_Homalictus.fasta")
   # Set locus name because why not
 (apex::setLocusNames(FjHoma) <- "COI")
   # Create genind object
-FjHoma_genInd <- apex::multidna2genind(FjHoma, mlst = TRUE)
+FjHoma_genInd <- apex::multidna2genind(FjHoma, mlst = FALSE,
+                                       genes = "COI")
 
 
   ##### 1.2 Prep. occurrences + DNA ####
@@ -122,6 +123,194 @@ Fst_Homa <- hierfstat::pairwise.neifst(dat = FjHoma_genInd, diploid = FALSE) %>%
 colnames(Fst_Homa) <- rownames(Fst_Homa)
   # Save output
 write.csv(Fst_Homa, paste0(RootPath, "/hierfstat_FST.csv"))
+
+###### c. Shannon's Index ####
+  # install ShannonGen from devtools
+if (!"devtools" %in% installed.packages()) install.packages("devtools")
+devtools::install_github("konopinski/Shannon")
+install.packages("SpadeR")
+library(ShannonGen)
+
+
+# Use the genetic information in the matched dataframe to get haplotype statistics
+FJHoma_haplotypes <- matched %>%
+    # Group by species name
+  dplyr::group_by(Species_name) %>%
+    # Get counts of each haplotype
+  dplyr::count(Sequence) %>% 
+    # remove the Sequence column as it's not needed for the stats
+  dplyr::select(!Sequence) %>%
+    # Add row numbers to make them unique
+  mutate(row = row_number()) %>%
+    # Pivot the tible wider so that each species has it's own column with haplotype counts
+  tidyr::pivot_wider(names_from = Species_name,
+                     values_from = n,
+                     values_fill = 0)
+ 
+  
+  # Set up formulae from ShannonGen as functions
+    # Zahl_1977
+Z = function(X) {
+  X = X[X > 0]
+  Y = X[X > 1]
+  n = sum(X)
+  -n * sum(X/n * log(X/n)) - (n - 1)/n * sum((n - X) * 
+        (-X/(n - 1) * log(X/(n - 1)))) - (n - 1)/n * sum(-Y * 
+        (Y - 1)/(n - 1) * log((Y - 1)/(n - 1)))
+}
+
+  # Shannon_1949
+MLE = function(X) {
+  X = X[X > 0]
+  n = sum(X)
+  -sum(X/n * log(X/n))
+}
+
+  # Calculate the statistics 
+out_Zahl_1977 <- apply(FJHoma_haplotypes, MARGIN = 2, FUN = Z)
+out_Shannon_1949 <- apply(FJHoma_haplotypes, MARGIN = 2, FUN = MLE)
+
+  # Combine the statistics
+outCombined <- dplyr::bind_cols(names(out_Zahl_1977), out_Zahl_1977, out_Shannon_1949) %>%
+    # Set the column names
+  setNames(c("Species_name", "Zahl", "Shannon")) %>%
+    # Remove the "row" statistic 
+  dplyr::filter(!Species_name == "row") %>%
+    # Add haplotype counts
+  dplyr::left_join(matched %>%
+                     # Group by species name
+                     dplyr::group_by(Species_name) %>%
+                     dplyr::distinct(Sequence, .keep_all = TRUE) %>%
+                     # Get counts of each haplotype
+                     dplyr::count(., name = "haplotypeCount"),
+                   by = "Species_name") %>%
+   # Add sequence counts
+  dplyr::left_join(matched %>%
+                     # Group by species name
+                     dplyr::group_by(Species_name) %>%
+                     # Get counts of each haplotype
+                     dplyr::count(name = "sequenceCount"),
+                   by = "Species_name") %>%
+    # Add Wolbachia infection status
+  dplyr::mutate(WolbachiaDetected = dplyr::if_else(
+    Species_name %in% c("Lasioglossum (Homalictus) ostridorsum", "Lasioglossum (Homalictus) kaicolo",  "Lasioglossum (Homalictus) hadrander", 
+                        "Lasioglossum (Homalictus) groomi",  "Lasioglossum (Homalictus) fijiensis",   "Lasioglossum (Homalictus) concavus",  
+                        "Lasioglossum (Homalictus) atritergus",  "Lasioglossum (Homalictus) sp. S",   "Lasioglossum (Homalictus) sp. F",  
+                        "Lasioglossum (Homalictus) sp. M",  "Lasioglossum (Homalictus) sp. R" ),
+    "Infected", "Unknown"))
+
+outCombined_longer <- outCombined %>%
+  dplyr::select(!c("haplotypeCount","sequenceCount")) %>%
+  tidyr::pivot_longer(cols = c("Zahl","Shannon")) %>%
+  dplyr::arrange(desc(value)) %>%
+  dplyr::arrange(WolbachiaDetected) %>% 
+  dplyr::group_by(WolbachiaDetected) %>%
+    # Change 0 to NA
+  dplyr::mutate(value = dplyr::if_else(value == 0,
+                                       NA_integer_, value)) %>%
+    # Drop na values for Shannon and Zahl
+  tidyr::drop_na(value)
+  
+  ###### d. Shannon plots ####
+ggplot2::ggplot(outCombined_longer, aes(fill=name, y=value, 
+                                        x= reorder(Species_name, value, decreasing = TRUE))) + 
+  ggplot2::geom_bar(position="dodge", stat="identity") +
+  ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust=1))+
+  ggplot2::xlab("Species") + ggplot2::ylab("Statistic value") +
+  ggplot2::facet_wrap(~WolbachiaDetected, drop = FALSE, scale="free_x")
+
+  ###### e. t.tests ####
+  # Remove NA from outCombined
+outCombined_complete <- outCombined %>%
+  dplyr::filter(!c(is.na(Zahl) | is.na(Shannon)| Zahl == 0 | Shannon == 0) )
+
+# Test normality
+shapiro.test(outCombined_complete$Zahl)
+shapiro.test(outCombined_complete$Shannon)
+shapiro.test(outCombined_complete$haplotypeCount)
+shapiro.test(outCombined_complete$sequenceCount)
+
+  # Get subsets of Unknown and Infected data
+UnknownDF <- outCombined_complete %>%
+  dplyr::filter(WolbachiaDetected == "Unknown")
+InfectedDF <- outCombined_complete %>%
+  dplyr::filter(WolbachiaDetected == "Infected")
+
+  # Calculate p-values
+    # Wilcoxon rank sum test (equivalent to the Mann-Whitney test: see the Note) is carried out
+ZahlP <- wilcox.test(UnknownDF$Zahl, InfectedDF$Zahl, alternative = "two.sided", paired = FALSE,
+                     exact = FALSE, conf.int = TRUE)
+ShannonP <- wilcox.test(UnknownDF$Shannon, InfectedDF$Shannon, alternative = "two.sided", paired = FALSE,
+                   exact = FALSE)
+sequenceCountP <- wilcox.test(UnknownDF$sequenceCount, InfectedDF$sequenceCount, alternative = "two.sided", paired = FALSE,
+                         exact = FALSE)
+haplotypeCountP <- wilcox.test(UnknownDF$haplotypeCount, InfectedDF$haplotypeCount, alternative = "two.sided", paired = FALSE,
+                          exact = FALSE)
+
+  # Combine t-test outputs into a table
+W_testOutput <- tibble::tibble(
+  name = c("Zahl", "Shannon", "sequenceCount", "haplotypeCount"),
+  #diffInLocation = c(ZahlP$estimate[1], ShannonP$estimate[1], sequenceCountP$estimate[1], haplotypeCountP$estimate[1]),
+  W_statistic = c(ZahlP$statistic, ShannonP$statistic, sequenceCountP$statistic, haplotypeCountP$statistic),
+  #df = c(ZahlP$parameter, ShannonP$parameter, sequenceCountP$parameter, haplotypeCountP$parameter),
+  p_value = c(ZahlP$p.value, ShannonP$p.value, sequenceCountP$p.value, haplotypeCountP$p.value)
+  )
+
+  ###### f. mean plots ####
+  # make the data sets for the statistics and for the sampling
+outCombined_plot_Stats <- outCombined_complete %>% 
+  dplyr::mutate(rowNum = row_number()) %>%
+  tidyr::pivot_longer(
+    cols =  c("Zahl", "Shannon", "haplotypeCount", "sequenceCount")) %>%
+  dplyr::filter(name %in% c("Zahl", "Shannon"))
+  # sampling
+outCombined_plot_Sampling <- outCombined_complete %>% 
+  dplyr::mutate(rowNum = row_number()) %>%
+  tidyr::pivot_longer(
+    cols =  c("Zahl", "Shannon", "haplotypeCount", "sequenceCount")) %>%
+  dplyr::filter(name %in% c("haplotypeCount", "sequenceCount"))
+
+  # Statistic plot
+statPlot <- ggplot2::ggplot(outCombined_plot_Stats, 
+                            aes(x= name, y=value, fill=WolbachiaDetected)) + 
+  ggplot2::geom_boxplot() +
+  ggplot2::xlab("Wolbachia infection status") + ggplot2::ylab("Diversity statistic") +
+  ggplot2::theme(legend.position = "none",
+                 panel.background = ggplot2::element_rect(fill = "transparent",
+                                                          colour = "black",
+                                                          linetype = NULL)) +
+  ggplot2::scale_fill_manual(values = c("#E97777", "#82AAE3"))
+# Sampling plot
+samplePlot <- ggplot2::ggplot(outCombined_plot_Sampling, aes(x= name, y= log(value), fill=WolbachiaDetected)) + 
+  ggplot2::geom_boxplot() +
+  ggplot2::xlab("Wolbachia infection status") + ggplot2::ylab("Log of count") +
+  ggplot2::theme(legend.position = "none",
+                 panel.background = ggplot2::element_rect(fill = "transparent",
+                                                          colour = "black",
+                                                          linetype = NULL))+
+  ggplot2::scale_fill_manual(values = c("#E97777", "#82AAE3"))
+  # Legend
+legendPlot <- ggplot2::ggplot(outCombined_complete %>% 
+                  dplyr::mutate(rowNum = row_number()) %>%
+                  tidyr::pivot_longer(
+                    cols =  c("Zahl", "Shannon", "haplotypeCount", "sequenceCount")), 
+                aes(x= name, y= value, fill=WolbachiaDetected)) + 
+  ggplot2::geom_boxplot() +
+  ggplot2::xlab("Wolbachia infection status") + ggplot2::ylab("Log of count") +
+  ggplot2::theme(legend.position = "right",
+                 panel.background = ggplot2::element_rect(fill = "transparent",
+                                                          colour = "black",
+                                                          linetype = NULL)) +
+  ggplot2::scale_fill_manual(name = "Infection status", 
+                             values = c("#E97777", "#82AAE3"),
+                             labels = c("Infected", "Unknown"))
+  # Combine and save
+cowplot::plot_grid(statPlot, samplePlot, cowplot::get_legend(legendPlot), ncol = 3,
+                   rel_widths = c(2, 2, 1), labels = c("a", "b", "")) %>%
+  cowplot::save_plot(filename = "DiversityPlot.pdf", plot = ., base_width = 8, base_height = 3.5)
+
+
+
   
 
 #### 2. Maps ####
