@@ -124,13 +124,8 @@ colnames(Fst_Homa) <- rownames(Fst_Homa)
   # Save output
 write.csv(Fst_Homa, paste0(RootPath, "/hierfstat_FST.csv"))
 
-###### c. Shannon's Index ####
-  # install ShannonGen from devtools
-if (!"devtools" %in% installed.packages()) install.packages("devtools")
-devtools::install_github("konopinski/Shannon")
-install.packages("SpadeR")
-library(ShannonGen)
-
+#### 1.4 Shannon's Index ####
+wolbachiaSpecies = readr::read_csv("wolbachiaSpecies.csv")
 
 # Use the genetic information in the matched dataframe to get haplotype statistics
 FJHoma_haplotypes <- matched %>%
@@ -145,7 +140,8 @@ FJHoma_haplotypes <- matched %>%
     # Pivot the tible wider so that each species has it's own column with haplotype counts
   tidyr::pivot_wider(names_from = Species_name,
                      values_from = n,
-                     values_fill = 0)
+                     values_fill = 0) 
+    # OPTIONAL filter to ONLY Wolbachia individuals
  
   
   # Set up formulae from ShannonGen as functions
@@ -211,7 +207,7 @@ outCombined_longer <- outCombined %>%
     # Drop na values for Shannon and Zahl
   tidyr::drop_na(value)
   
-  ###### d. Shannon plots ####
+  ###### a. Shannon plots ####
 ggplot2::ggplot(outCombined_longer, aes(fill=name, y=value, 
                                         x= reorder(Species_name, value, decreasing = TRUE))) + 
   ggplot2::geom_bar(position="dodge", stat="identity") +
@@ -219,7 +215,7 @@ ggplot2::ggplot(outCombined_longer, aes(fill=name, y=value,
   ggplot2::xlab("Species") + ggplot2::ylab("Statistic value") +
   ggplot2::facet_wrap(~WolbachiaDetected, drop = FALSE, scale="free_x")
 
-  ###### e. t.tests ####
+  ###### b. t.tests ####
   # Remove NA from outCombined
 outCombined_complete <- outCombined %>%
   dplyr::filter(!c(is.na(Zahl) | is.na(Shannon)| Zahl == 0 | Shannon == 0) )
@@ -256,7 +252,7 @@ W_testOutput <- tibble::tibble(
   p_value = c(ZahlP$p.value, ShannonP$p.value, sequenceCountP$p.value, haplotypeCountP$p.value)
   )
 
-  ###### f. mean plots ####
+  ###### c. mean plots ####
   # make the data sets for the statistics and for the sampling
 outCombined_plot_Stats <- outCombined_complete %>% 
   dplyr::mutate(rowNum = row_number()) %>%
