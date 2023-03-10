@@ -125,11 +125,18 @@ colnames(Fst_Homa) <- rownames(Fst_Homa)
 write.csv(Fst_Homa, paste0(RootPath, "/hierfstat_FST.csv"))
 
 #### 1.4 Shannon's Index ####
-wolbachiaSpecies = readr::read_csv("wolbachiaSpecies.csv")
+  # Read in the sheet with the infected/not infected individuals (all tested)
+wolbachiaInfected = readr::read_csv("Wolbachia_PositiveNagative.csv")
+
+
 
 # Use the genetic information in the matched dataframe to get haplotype statistics
 FJHoma_haplotypes <- matched %>%
+    # !!! OPTIONAL filter to ONLY Wolbachia individuals
+  #dplyr::filter(Specimen_code %in% wolbachiaInfected$seqCode) %>%
     # Group by species name
+   # !!! OPTIONAL remove fijiensis
+  #dplyr::filter(!Species_name == "Lasioglossum (Homalictus) fijiensis") %>%
   dplyr::group_by(Species_name) %>%
     # Get counts of each haplotype
   dplyr::count(Sequence) %>% 
@@ -141,8 +148,6 @@ FJHoma_haplotypes <- matched %>%
   tidyr::pivot_wider(names_from = Species_name,
                      values_from = n,
                      values_fill = 0) 
-    # OPTIONAL filter to ONLY Wolbachia individuals
- 
   
   # Set up formulae from ShannonGen as functions
     # Zahl_1977
@@ -207,13 +212,16 @@ outCombined_longer <- outCombined %>%
     # Drop na values for Shannon and Zahl
   tidyr::drop_na(value)
   
-  ###### a. Shannon plots ####
-ggplot2::ggplot(outCombined_longer, aes(fill=name, y=value, 
+  ###### a. diversity plots ####
+(diversityPlot <- ggplot2::ggplot(outCombined_longer, aes(fill=name, y=value, 
                                         x= reorder(Species_name, value, decreasing = TRUE))) + 
   ggplot2::geom_bar(position="dodge", stat="identity") +
   ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust=1))+
   ggplot2::xlab("Species") + ggplot2::ylab("Statistic value") +
-  ggplot2::facet_wrap(~WolbachiaDetected, drop = FALSE, scale="free_x")
+  ggplot2::facet_wrap(~WolbachiaDetected, drop = FALSE, scale="free_x"))
+
+  ggplot2::ggsave("statistics_perSpecies.pdf", plot = diversityPlot, 
+                  width = 10, height = 8, units = "in", dpi = 300)
 
   ###### b. t.tests ####
   # Remove NA from outCombined
@@ -306,8 +314,72 @@ cowplot::plot_grid(statPlot, samplePlot, cowplot::get_legend(legendPlot), ncol =
   cowplot::save_plot(filename = "DiversityPlot.pdf", plot = ., base_width = 8, base_height = 3.5)
 
 
+###### d. explore Wolbachia infections ####
 
-  
+WolTested <- matched %>%
+  # !!! OPTIONAL filter to ONLY Wolbachia individuals
+  dplyr::filter(Specimen_code %in% wolbachiaInfected$seqCode) %>%
+  dplyr::left_join(wolbachiaInfected %>%
+                     dplyr::distinct(seqCode, .keep_all = TRUE),
+                   by = c("Specimen_code" = "seqCode")) %>%
+  dplyr::group_by(Species_name) %>%
+  dplyr::mutate(percentInfected = round((sum(WolbachiaPositive)/dplyr::n())*100, 0) ,
+                sampleSize = dplyr::n()) %>%
+  dplyr::distinct(Species_name, .keep_all = TRUE) %>% 
+  dplyr::select(Species_name, percentInfected, sampleSize)
+
+  ###### e. linear models ####
+
+TEST <- kruskal.test(Zahl ~ WolbachiaDetected, data = outCombined)
+
+install.packages("Rfit")
+  # Linear models
+  # Zahl
+Zahl_lm <- Rfit::rfit(formula = Zahl ~ haplotypeCount + sequenceCount + WolbachiaDetected, data = outCombined)
+summary(Zahl_lm)
+  # Shannon
+Shannon_lm <- rfit(formula = Shannon ~ haplotypeCount + sequenceCount + WolbachiaDetected, data = outCombined)
+summary(Shannon_lm)
+
+  # PLOTS
+# Zahl plots
+(Zahl_haplo <- ggplot2::ggplot(outCombined, aes(x = haplotypeCount, y = Zahl)) +
+    ggplot2::geom_point(aes(colour = WolbachiaDetected)) +                                # scatter plot, coloured by sex
+    ggplot2::labs(x = "Haplotype count", y = "Zahl") +
+    ggplot2::stat_smooth(method = "lm", aes(fill = WolbachiaDetected, colour = WolbachiaDetected)) +    # adding regression lines for each sex
+    ggplot2::scale_colour_manual(values = c("#FFC125", "#36648B")) +
+    ggplot2::scale_fill_manual(values = c("#FFC125", "#36648B")) +
+    ggplot2::theme_classic() )
+(Zahl_sequence <- ggplot2::ggplot(outCombined, aes(x = sequenceCount, y = Zahl)) +
+    ggplot2::geom_point(aes(colour = WolbachiaDetected)) +                                # scatter plot, coloured by sex
+    ggplot2::labs(x = "Sequence count", y = "Zahl") +
+    ggplot2::stat_smooth(method = "lm", aes(fill = WolbachiaDetected, colour = WolbachiaDetected)) +    # adding regression lines for each sex
+    ggplot2::scale_colour_manual(values = c("#FFC125", "#36648B")) +
+    ggplot2::scale_fill_manual(values = c("#FFC125", "#36648B")) +
+    ggplot2::theme_classic() )
+
+
+# Shannon plots
+(Shannon_haplo <- ggplot2::ggplot(outCombined, aes(x = haplotypeCount, y = Shannon)) +
+    ggplot2::geom_point(aes(colour = WolbachiaDetected)) +                                # scatter plot, coloured by sex
+    ggplot2::labs(x = "Haplotype count", y = "Shannon") +
+    ggplot2::stat_smooth(method = "lm", aes(fill = WolbachiaDetected, colour = WolbachiaDetected)) +    # adding regression lines for each sex
+    ggplot2::scale_colour_manual(values = c("#FFC125", "#36648B")) +
+    ggplot2::scale_fill_manual(values = c("#FFC125", "#36648B")) +
+    ggplot2::theme_classic() )
+(Shannon_sequence <- ggplot2::ggplot(outCombined, aes(x = sequenceCount, y = Shannon)) +
+    ggplot2::geom_point(aes(colour = WolbachiaDetected)) +                                # scatter plot, coloured by sex
+    ggplot2::labs(x = "Sequence count", y = "Shannon") +
+    ggplot2::stat_smooth(method = "lm", aes(fill = WolbachiaDetected, colour = WolbachiaDetected)) +    # adding regression lines for each sex
+    ggplot2::scale_colour_manual(values = c("#FFC125", "#36648B")) +
+    ggplot2::scale_fill_manual(values = c("#FFC125", "#36648B")) +
+    ggplot2::theme_classic() ) 
+
+cowplot::plot_grid(Zahl_haplo, Zahl_sequence,
+                   Shannon_haplo, Shannon_sequence, 
+                   ncol = 2, labels = c("a", "b", "c", "d")) %>%
+  cowplot::save_plot(filename = "diversity_sampling.pdf", plot = ., 
+                     base_width = 15, base_height = 10)
 
 #### 2. Maps ####
   ##### 2.1 prepare data ####
