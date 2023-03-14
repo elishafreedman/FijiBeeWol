@@ -1,0 +1,181 @@
+species,Name,Estimate,s.e.,95%Lower,95%Upper
+Lasioglossum (Homalictus) achrostus,Lasioglossum (Homalictus) achrostus,NA,NA,NA,NA
+Lasioglossum (Homalictus) achrostus,Homogeneous Model,1,0.284,1,1.799
+Lasioglossum (Homalictus) achrostus,Homogeneous (MLE),1.255,0.734,1.014,5.757
+Lasioglossum (Homalictus) achrostus,"Chao1 (Chao, 1984)",1,0.284,1,1.799
+Lasioglossum (Homalictus) achrostus,Chao1-bc,1,0.284,1,1.799
+Lasioglossum (Homalictus) achrostus,iChao1 (Chiu et al. 2014),1,0.284,1,1.799
+Lasioglossum (Homalictus) achrostus,"ACE (Chao & Lee, 1992)",1,0.284,1,1.799
+Lasioglossum (Homalictus) achrostus,"ACE-1 (Chao & Lee, 1992)",1,0.284,1,1.799
+Lasioglossum (Homalictus) achrostus,1st order jackknife,1,0.284,1,1.799
+Lasioglossum (Homalictus) achrostus,2nd order jackknife,1,0.284,1,1.799
+Lasioglossum (Homalictus) atritergus,Lasioglossum (Homalictus) atritergus,NA,NA,NA,NA
+Lasioglossum (Homalictus) atritergus,Homogeneous Model,4.375,0.798,4.029,8.867
+Lasioglossum (Homalictus) atritergus,Homogeneous (MLE),4.106,0.348,4.005,6.3
+Lasioglossum (Homalictus) atritergus,"Chao1 (Chao, 1984)",4,0.517,4,5.613
+Lasioglossum (Homalictus) atritergus,Chao1-bc,4,0.517,4,5.613
+Lasioglossum (Homalictus) atritergus,iChao1 (Chiu et al. 2014),4.25,0.517,4.02,7.134
+Lasioglossum (Homalictus) atritergus,"ACE (Chao & Lee, 1992)",4.621,1.387,4.045,12.546
+Lasioglossum (Homalictus) atritergus,"ACE-1 (Chao & Lee, 1992)",4.721,1.734,4.048,14.854
+Lasioglossum (Homalictus) atritergus,1st order jackknife,4.933,1.343,4.117,11.443
+Lasioglossum (Homalictus) atritergus,2nd order jackknife,5.8,2.245,4.27,16.017
+Lasioglossum (Homalictus) concavus,Lasioglossum (Homalictus) concavus,NA,NA,NA,NA
+Lasioglossum (Homalictus) concavus,Homogeneous Model,9,5.416,5.541,34.561
+Lasioglossum (Homalictus) concavus,Homogeneous (MLE),5.406,0.745,5.037,9.387
+Lasioglossum (Homalictus) concavus,"Chao1 (Chao, 1984)",7.786,4.088,5.341,27.758
+Lasioglossum (Homalictus) concavus,Chao1-bc,7.786,4.088,5.341,27.758
+Lasioglossum (Homalictus) concavus,iChao1 (Chiu et al. 2014),8.536,4.088,5.581,26.511
+Lasioglossum (Homalictus) concavus,"ACE (Chao & Lee, 1992)",12.6,11.736,5.873,71.178
+Lasioglossum (Homalictus) concavus,"ACE-1 (Chao & Lee, 1992)",16.92,22.044,6.093,135.001
+Lasioglossum (Homalictus) concavus,1st order jackknife,7.786,2.318,5.672,16.543
+Lasioglossum (Homalictus) concavus,2nd order jackknife,10.357,3.863,6.507,24.043
+Lasioglossum (Homalictus) fijiensis,Lasioglossum (Homalictus) fijiensis,NA,NA,NA,NA
+Lasioglossum (Homalictus) fijiensis,Homogeneous Model,117.944,13.622,98.697,154.266
+Lasioglossum (Homalictus) fijiensis,Homogeneous (MLE),77.051,0.227,77.002,78.547
+Lasioglossum (Homalictus) fijiensis,"Chao1 (Chao, 1984)",184.365,49.357,122.515,330.262
+Lasioglossum (Homalictus) fijiensis,Chao1-bc,171.432,41.553,118.401,292.391
+Lasioglossum (Homalictus) fijiensis,iChao1 (Chiu et al. 2014),192.75,41.695,135.373,306.527
+Lasioglossum (Homalictus) fijiensis,"ACE (Chao & Lee, 1992)",150.307,27.096,113.352,224.828
+Lasioglossum (Homalictus) fijiensis,"ACE-1 (Chao & Lee, 1992)",181.262,45.581,122.935,313.649
+Lasioglossum (Homalictus) fijiensis,1st order jackknife,120.922,9.368,106.05,143.409
+Lasioglossum (Homalictus) fijiensis,2nd order jackknife,155.814,16.211,129.885,194.454
+Lasioglossum (Homalictus) hadrander,Lasioglossum (Homalictus) hadrander,NA,NA,NA,NA
+Lasioglossum (Homalictus) hadrander,Homogeneous Model,15.882,3.324,12.908,28.608
+Lasioglossum (Homalictus) hadrander,Homogeneous (MLE),12.564,0.831,12.069,16.633
+Lasioglossum (Homalictus) hadrander,"Chao1 (Chao, 1984)",29.538,23.026,14.466,136.749
+Lasioglossum (Homalictus) hadrander,Chao1-bc,19.308,7.983,13.286,53.513
+Lasioglossum (Homalictus) hadrander,iChao1 (Chiu et al. 2014),32.038,19.797,15.975,113.004
+Lasioglossum (Homalictus) hadrander,"ACE (Chao & Lee, 1992)",18.747,6.449,13.391,44.723
+Lasioglossum (Homalictus) hadrander,"ACE-1 (Chao & Lee, 1992)",20.862,9.762,13.544,62.85
+Lasioglossum (Homalictus) hadrander,1st order jackknife,17.846,3.397,14.031,28.827
+Lasioglossum (Homalictus) hadrander,2nd order jackknife,22.615,5.801,15.897,40.913
+Lasioglossum (Homalictus) kaicolo,Lasioglossum (Homalictus) kaicolo,NA,NA,NA,NA
+Lasioglossum (Homalictus) kaicolo,Homogeneous Model,11.667,8.433,5.981,50.286
+Lasioglossum (Homalictus) kaicolo,Homogeneous (MLE),9.785,5.448,5.801,33.577
+Lasioglossum (Homalictus) kaicolo,"Chao1 (Chao, 1984)",10.143,6.042,5.829,36.907
+Lasioglossum (Homalictus) kaicolo,Chao1-bc,10.143,6.042,5.829,36.907
+Lasioglossum (Homalictus) kaicolo,iChao1 (Chiu et al. 2014),11.143,6.042,6.225,35.804
+Lasioglossum (Homalictus) kaicolo,"ACE (Chao & Lee, 1992)",17.889,18.398,6.633,106.729
+Lasioglossum (Homalictus) kaicolo,"ACE-1 (Chao & Lee, 1992)",26.185,35.926,7.164,212.387
+Lasioglossum (Homalictus) kaicolo,1st order jackknife,8.429,2.523,5.944,17.449
+Lasioglossum (Homalictus) kaicolo,2nd order jackknife,11.286,4.02,6.995,24.808
+Lasioglossum (Homalictus) nadarivatu,Lasioglossum (Homalictus) nadarivatu,NA,NA,NA,NA
+Lasioglossum (Homalictus) nadarivatu,Homogeneous Model,Inf,NA,NA,NA
+Lasioglossum (Homalictus) nadarivatu,Homogeneous (MLE),2.024,0.159,2.001,3.098
+Lasioglossum (Homalictus) nadarivatu,"Chao1 (Chao, 1984)",2,0.466,2,3.572
+Lasioglossum (Homalictus) nadarivatu,Chao1-bc,2,0.466,2,3.572
+Lasioglossum (Homalictus) nadarivatu,iChao1 (Chiu et al. 2014),2,0.466,2,3.572
+Lasioglossum (Homalictus) nadarivatu,"ACE (Chao & Lee, 1992)",2,0.466,2,3.572
+Lasioglossum (Homalictus) nadarivatu,"ACE-1 (Chao & Lee, 1992)",2,0.466,2,3.572
+Lasioglossum (Homalictus) nadarivatu,1st order jackknife,2.889,1.296,2.11,9.202
+Lasioglossum (Homalictus) nadarivatu,2nd order jackknife,3.667,2.108,2.245,13.321
+Lasioglossum (Homalictus) ostridorsum,Lasioglossum (Homalictus) ostridorsum,NA,NA,NA,NA
+Lasioglossum (Homalictus) ostridorsum,Homogeneous Model,25.6,11.639,15.702,71.746
+Lasioglossum (Homalictus) ostridorsum,Homogeneous (MLE),13.311,0.592,13.028,16.513
+Lasioglossum (Homalictus) ostridorsum,"Chao1 (Chao, 1984)",37.01,30.494,16.517,176.918
+Lasioglossum (Homalictus) ostridorsum,Chao1-bc,23.29,10.381,14.992,66.163
+Lasioglossum (Homalictus) ostridorsum,iChao1 (Chiu et al. 2014),38.635,30.494,17.07,174.477
+Lasioglossum (Homalictus) ostridorsum,"ACE (Chao & Lee, 1992)",30.793,18.498,16.323,108.258
+Lasioglossum (Homalictus) ostridorsum,"ACE-1 (Chao & Lee, 1992)",36.08,27.794,16.609,160.587
+Lasioglossum (Homalictus) ostridorsum,1st order jackknife,19.86,3.685,15.557,31.406
+Lasioglossum (Homalictus) ostridorsum,2nd order jackknife,25.64,6.314,18.011,44.879
+Lasioglossum (Homalictus) sp. G,Lasioglossum (Homalictus) sp. G,NA,NA,NA,NA
+Lasioglossum (Homalictus) sp. G,Homogeneous Model,3,1.871,2.09,13.064
+Lasioglossum (Homalictus) sp. G,Homogeneous (MLE),3.432,2.562,2.137,16.988
+Lasioglossum (Homalictus) sp. G,"Chao1 (Chao, 1984)",2.333,0.943,2.018,8.09
+Lasioglossum (Homalictus) sp. G,Chao1-bc,2,0.462,2,3.883
+Lasioglossum (Homalictus) sp. G,iChao1 (Chiu et al. 2014),2.333,0.943,2.018,8.09
+Lasioglossum (Homalictus) sp. G,"ACE (Chao & Lee, 1992)",3,1.871,2.09,13.064
+Lasioglossum (Homalictus) sp. G,"ACE-1 (Chao & Lee, 1992)",3,1.871,2.09,13.064
+Lasioglossum (Homalictus) sp. G,1st order jackknife,2.667,1.054,2.074,7.979
+Lasioglossum (Homalictus) sp. G,2nd order jackknife,2.833,1.364,2.089,9.806
+Lasioglossum (Homalictus) sp. J,Lasioglossum (Homalictus) sp. J,NA,NA,NA,NA
+Lasioglossum (Homalictus) sp. J,Homogeneous Model,1,0.284,1,1.799
+Lasioglossum (Homalictus) sp. J,Homogeneous (MLE),1.255,0.734,1.014,5.757
+Lasioglossum (Homalictus) sp. J,"Chao1 (Chao, 1984)",1,0.284,1,1.799
+Lasioglossum (Homalictus) sp. J,Chao1-bc,1,0.284,1,1.799
+Lasioglossum (Homalictus) sp. J,iChao1 (Chiu et al. 2014),1,0.284,1,1.799
+Lasioglossum (Homalictus) sp. J,"ACE (Chao & Lee, 1992)",1,0.284,1,1.799
+Lasioglossum (Homalictus) sp. J,"ACE-1 (Chao & Lee, 1992)",1,0.284,1,1.799
+Lasioglossum (Homalictus) sp. J,1st order jackknife,1,0.284,1,1.799
+Lasioglossum (Homalictus) sp. J,2nd order jackknife,1,0.284,1,1.799
+Lasioglossum (Homalictus) sp. O,Lasioglossum (Homalictus) sp. O,NA,NA,NA,NA
+Lasioglossum (Homalictus) sp. O,Homogeneous Model,2.667,1.333,2.055,10.013
+Lasioglossum (Homalictus) sp. O,Homogeneous (MLE),2.51,1.038,2.042,8.266
+Lasioglossum (Homalictus) sp. O,"Chao1 (Chao, 1984)",2,0.461,2,3.671
+Lasioglossum (Homalictus) sp. O,Chao1-bc,2,0.461,2,3.671
+Lasioglossum (Homalictus) sp. O,iChao1 (Chiu et al. 2014),2.25,0.461,2.023,4.72
+Lasioglossum (Homalictus) sp. O,"ACE (Chao & Lee, 1992)",3.111,2.491,2.08,17.365
+Lasioglossum (Homalictus) sp. O,"ACE-1 (Chao & Lee, 1992)",3.407,3.631,2.086,25.059
+Lasioglossum (Homalictus) sp. O,1st order jackknife,2.75,1.146,2.087,8.442
+Lasioglossum (Homalictus) sp. O,2nd order jackknife,3.25,1.677,2.171,11.133
+Lasioglossum (Homalictus) sp. S,Lasioglossum (Homalictus) sp. S,NA,NA,NA,NA
+Lasioglossum (Homalictus) sp. S,Homogeneous Model,Inf,NA,NA,NA
+Lasioglossum (Homalictus) sp. S,Homogeneous (MLE),3,0.004,3,3.012
+Lasioglossum (Homalictus) sp. S,"Chao1 (Chao, 1984)",3.972,2.067,3.075,15.601
+Lasioglossum (Homalictus) sp. S,Chao1-bc,3.972,2.067,3.075,15.601
+Lasioglossum (Homalictus) sp. S,iChao1 (Chiu et al. 2014),3.972,2.067,3.075,15.601
+Lasioglossum (Homalictus) sp. S,"ACE (Chao & Lee, 1992)",3.972,2.067,3.075,15.601
+Lasioglossum (Homalictus) sp. S,"ACE-1 (Chao & Lee, 1992)",3.972,2.067,3.075,15.601
+Lasioglossum (Homalictus) sp. S,1st order jackknife,4.944,1.958,3.377,13.025
+Lasioglossum (Homalictus) sp. S,2nd order jackknife,6.833,3.344,3.878,19.744
+Lasioglossum (Homalictus) sp. T,Lasioglossum (Homalictus) sp. T,NA,NA,NA,NA
+Lasioglossum (Homalictus) sp. T,Homogeneous Model,2,0.223,2,2.508
+Lasioglossum (Homalictus) sp. T,Homogeneous (MLE),2.04,0.212,2.001,3.459
+Lasioglossum (Homalictus) sp. T,"Chao1 (Chao, 1984)",2,0.223,2,2.508
+Lasioglossum (Homalictus) sp. T,Chao1-bc,2,0.223,2,2.508
+Lasioglossum (Homalictus) sp. T,iChao1 (Chiu et al. 2014),2,0.223,2,2.508
+Lasioglossum (Homalictus) sp. T,"ACE (Chao & Lee, 1992)",2,0.223,2,2.508
+Lasioglossum (Homalictus) sp. T,"ACE-1 (Chao & Lee, 1992)",2,0.223,2,2.508
+Lasioglossum (Homalictus) sp. T,1st order jackknife,2,0.223,2,2.508
+Lasioglossum (Homalictus) sp. T,2nd order jackknife,2,0.223,2,2.508
+Lasioglossum (Homalictus) sp. U,Lasioglossum (Homalictus) sp. U,NA,NA,NA,NA
+Lasioglossum (Homalictus) sp. U,Homogeneous Model,14.714,5.259,10.231,35.527
+Lasioglossum (Homalictus) sp. U,Homogeneous (MLE),9.57,0.859,9.067,13.813
+Lasioglossum (Homalictus) sp. U,"Chao1 (Chao, 1984)",15.019,7.288,9.935,47.744
+Lasioglossum (Homalictus) sp. U,Chao1-bc,12.21,3.991,9.483,30.35
+Lasioglossum (Homalictus) sp. U,iChao1 (Chiu et al. 2014),16.019,7.288,10.313,46.518
+Lasioglossum (Homalictus) sp. U,"ACE (Chao & Lee, 1992)",15.048,6.623,10.062,43.457
+Lasioglossum (Homalictus) sp. U,"ACE-1 (Chao & Lee, 1992)",15.265,7.764,9.946,50.494
+Lasioglossum (Homalictus) sp. U,1st order jackknife,13.815,3.074,10.53,24.147
+Lasioglossum (Homalictus) sp. U,2nd order jackknife,16.664,5.205,11.292,34.624
+Lasioglossum (Homalictus) sp. V,Lasioglossum (Homalictus) sp. V,NA,NA,NA,NA
+Lasioglossum (Homalictus) sp. V,Homogeneous Model,2.5,1.061,2.039,8.462
+Lasioglossum (Homalictus) sp. V,Homogeneous (MLE),2.241,0.607,2.015,5.837
+Lasioglossum (Homalictus) sp. V,"Chao1 (Chao, 1984)",2,0.46,2,3.596
+Lasioglossum (Homalictus) sp. V,Chao1-bc,2,0.46,2,3.596
+Lasioglossum (Homalictus) sp. V,iChao1 (Chiu et al. 2014),2,0.46,2,3.596
+Lasioglossum (Homalictus) sp. V,"ACE (Chao & Lee, 1992)",3.125,2.579,2.079,17.988
+Lasioglossum (Homalictus) sp. V,"ACE-1 (Chao & Lee, 1992)",3.594,4.296,2.092,29.511
+Lasioglossum (Homalictus) sp. V,1st order jackknife,2.8,1.2,2.095,8.717
+Lasioglossum (Homalictus) sp. V,2nd order jackknife,3.4,1.833,2.197,11.924
+Lasioglossum (Homalictus) taveuni,Lasioglossum (Homalictus) taveuni,NA,NA,NA,NA
+Lasioglossum (Homalictus) taveuni,Homogeneous Model,1,0.2,1,1.464
+Lasioglossum (Homalictus) taveuni,Homogeneous (MLE),1.063,0.286,1.002,2.958
+Lasioglossum (Homalictus) taveuni,"Chao1 (Chao, 1984)",1,0.2,1,1.464
+Lasioglossum (Homalictus) taveuni,Chao1-bc,1,0.2,1,1.464
+Lasioglossum (Homalictus) taveuni,iChao1 (Chiu et al. 2014),1,0.2,1,1.464
+Lasioglossum (Homalictus) taveuni,"ACE (Chao & Lee, 1992)",1,0.2,1,1.464
+Lasioglossum (Homalictus) taveuni,"ACE-1 (Chao & Lee, 1992)",1,0.2,1,1.464
+Lasioglossum (Homalictus) taveuni,1st order jackknife,1,0.2,1,1.464
+Lasioglossum (Homalictus) taveuni,2nd order jackknife,1,0.2,1,1.464
+Lasioglossum (Homalictus) terminalis,Lasioglossum (Homalictus) terminalis,NA,NA,NA,NA
+Lasioglossum (Homalictus) terminalis,Homogeneous Model,2,0.153,2,2.329
+Lasioglossum (Homalictus) terminalis,Homogeneous (MLE),2.024,0.159,2.001,3.098
+Lasioglossum (Homalictus) terminalis,"Chao1 (Chao, 1984)",2,0.153,2,2.329
+Lasioglossum (Homalictus) terminalis,Chao1-bc,2,0.153,2,2.329
+Lasioglossum (Homalictus) terminalis,iChao1 (Chiu et al. 2014),2,0.153,2,2.329
+Lasioglossum (Homalictus) terminalis,"ACE (Chao & Lee, 1992)",2,0.153,2,2.329
+Lasioglossum (Homalictus) terminalis,"ACE-1 (Chao & Lee, 1992)",2,0.153,2,2.329
+Lasioglossum (Homalictus) terminalis,1st order jackknife,2,0.153,2,2.329
+Lasioglossum (Homalictus) terminalis,2nd order jackknife,2,0.153,2,2.329
+Lasioglossum (Homalictus) tuiwawae,Lasioglossum (Homalictus) tuiwawae,NA,NA,NA,NA
+Lasioglossum (Homalictus) tuiwawae,Homogeneous Model,46,40.472,16.122,221.703
+Lasioglossum (Homalictus) tuiwawae,Homogeneous (MLE),10,0.007,10,10.026
+Lasioglossum (Homalictus) tuiwawae,"Chao1 (Chao, 1984)",41.736,39.274,14.8,219.842
+Lasioglossum (Homalictus) tuiwawae,Chao1-bc,23.884,13.143,12.895,76.581
+Lasioglossum (Homalictus) tuiwawae,iChao1 (Chiu et al. 2014),41.736,39.274,14.8,219.842
+Lasioglossum (Homalictus) tuiwawae,"ACE (Chao & Lee, 1992)",46,44.065,15.518,244.851
+Lasioglossum (Homalictus) tuiwawae,"ACE-1 (Chao & Lee, 1992)",46,47.373,15.047,266.797
+Lasioglossum (Homalictus) tuiwawae,1st order jackknife,17.934,3.975,13.138,30.06
+Lasioglossum (Homalictus) tuiwawae,2nd order jackknife,24.826,6.855,16.257,45.13

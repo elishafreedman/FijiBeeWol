@@ -124,12 +124,12 @@ colnames(Fst_Homa) <- rownames(Fst_Homa)
   # Save output
 write.csv(Fst_Homa, paste0(RootPath, "/hierfstat_FST.csv"))
 
-#### 1.4 Shannon's Index ####
+#### 1.4 Diversity Indexces ####
   # Read in the sheet with the infected/not infected individuals (all tested)
 wolbachiaInfected = readr::read_csv("Wolbachia_PositiveNagative.csv")
 
 
-
+  ###### a. calculate ####
 # Use the genetic information in the matched dataframe to get haplotype statistics
 FJHoma_haplotypes <- matched %>%
     # !!! OPTIONAL filter to ONLY Wolbachia individuals
@@ -171,6 +171,20 @@ MLE = function(X) {
 out_Zahl_1977 <- apply(FJHoma_haplotypes, MARGIN = 2, FUN = Z)
 out_Shannon_1949 <- apply(FJHoma_haplotypes, MARGIN = 2, FUN = MLE)
 
+source("ChaoWrapper.R")
+# Remove the row column
+FJHoma_haplotypes <- FJHoma_haplotypes %>%
+  dplyr::select(!row)
+# cClculate diversity indices from ChaoSpecies
+ChaoResults <- ChaoWrapper(FJHoma_haplotypes = FJHoma_haplotypes)
+ChaoResults$basicTable %>% readr::write_csv("basicChaoOutputs.csv")
+ChaoResults$diversityTable %>% readr::write_csv("diversityChaoOutputs.csv")
+  # Get the estimates of Chao1
+Chao1 <- ChaoResults$diversityTable %>% dplyr::filter(Name == "Chao1 (Chao, 1984)")
+
+
+
+
   # Combine the statistics
 outCombined <- dplyr::bind_cols(names(out_Zahl_1977), out_Zahl_1977, out_Shannon_1949) %>%
     # Set the column names
@@ -198,11 +212,16 @@ outCombined <- dplyr::bind_cols(names(out_Zahl_1977), out_Zahl_1977, out_Shannon
                         "Lasioglossum (Homalictus) groomi",  "Lasioglossum (Homalictus) fijiensis",   "Lasioglossum (Homalictus) concavus",  
                         "Lasioglossum (Homalictus) atritergus",  "Lasioglossum (Homalictus) sp. S",   "Lasioglossum (Homalictus) sp. F",  
                         "Lasioglossum (Homalictus) sp. M",  "Lasioglossum (Homalictus) sp. R" ),
-    "Infected", "Unknown"))
+    "Infected", "Unknown")) %>%
+  dplyr::left_join(Chao1 %>% 
+                     dplyr::select(species, Estimate) %>%
+                     dplyr::rename(ChaoEstimate = Estimate) %>%
+                     dplyr::mutate(log_ChaoEstimate = log(ChaoEstimate)),
+                   by = c("Species_name" = "species"))
 
 outCombined_longer <- outCombined %>%
   dplyr::select(!c("haplotypeCount","sequenceCount")) %>%
-  tidyr::pivot_longer(cols = c("Zahl","Shannon")) %>%
+  tidyr::pivot_longer(cols = c("Zahl","Shannon", "log_ChaoEstimate")) %>%
   dplyr::arrange(desc(value)) %>%
   dplyr::arrange(WolbachiaDetected) %>% 
   dplyr::group_by(WolbachiaDetected) %>%
@@ -212,7 +231,7 @@ outCombined_longer <- outCombined %>%
     # Drop na values for Shannon and Zahl
   tidyr::drop_na(value)
   
-  ###### a. diversity plots ####
+  ###### b. diversity plots ####
 (diversityPlot <- ggplot2::ggplot(outCombined_longer, aes(fill=name, y=value, 
                                         x= reorder(Species_name, value, decreasing = TRUE))) + 
   ggplot2::geom_bar(position="dodge", stat="identity") +
@@ -223,14 +242,15 @@ outCombined_longer <- outCombined %>%
   ggplot2::ggsave("statistics_perSpecies.pdf", plot = diversityPlot, 
                   width = 10, height = 8, units = "in", dpi = 300)
 
-  ###### b. t.tests ####
+  ###### c. shapiro.test ####
   # Remove NA from outCombined
 outCombined_complete <- outCombined %>%
-  dplyr::filter(!c(is.na(Zahl) | is.na(Shannon)| Zahl == 0 | Shannon == 0) )
+  dplyr::filter(!c(is.na(Zahl) | is.na(Shannon)| Zahl == 0 | Shannon == 0 ) )
 
 # Test normality
 shapiro.test(outCombined_complete$Zahl)
 shapiro.test(outCombined_complete$Shannon)
+shapiro.test(outCombined_complete$log_ChaoEstimate)
 shapiro.test(outCombined_complete$haplotypeCount)
 shapiro.test(outCombined_complete$sequenceCount)
 
@@ -246,6 +266,9 @@ ZahlP <- wilcox.test(UnknownDF$Zahl, InfectedDF$Zahl, alternative = "two.sided",
                      exact = FALSE, conf.int = TRUE)
 ShannonP <- wilcox.test(UnknownDF$Shannon, InfectedDF$Shannon, alternative = "two.sided", paired = FALSE,
                    exact = FALSE)
+ChaoEstimateP <- wilcox.test(UnknownDF$log_ChaoEstimate, InfectedDF$log_ChaoEstimate,
+                                 alternative = "two.sided", paired = FALSE,
+                                 exact = FALSE)
 sequenceCountP <- wilcox.test(UnknownDF$sequenceCount, InfectedDF$sequenceCount, alternative = "two.sided", paired = FALSE,
                          exact = FALSE)
 haplotypeCountP <- wilcox.test(UnknownDF$haplotypeCount, InfectedDF$haplotypeCount, alternative = "two.sided", paired = FALSE,
@@ -253,25 +276,27 @@ haplotypeCountP <- wilcox.test(UnknownDF$haplotypeCount, InfectedDF$haplotypeCou
 
   # Combine t-test outputs into a table
 W_testOutput <- tibble::tibble(
-  name = c("Zahl", "Shannon", "sequenceCount", "haplotypeCount"),
+  name = c("Zahl", "Shannon", "ChaoEstimate", "sequenceCount", "haplotypeCount"),
   #diffInLocation = c(ZahlP$estimate[1], ShannonP$estimate[1], sequenceCountP$estimate[1], haplotypeCountP$estimate[1]),
-  W_statistic = c(ZahlP$statistic, ShannonP$statistic, sequenceCountP$statistic, haplotypeCountP$statistic),
+  W_statistic = c(ZahlP$statistic, ShannonP$statistic, ChaoEstimateP$statistic,
+                  sequenceCountP$statistic, haplotypeCountP$statistic),
   #df = c(ZahlP$parameter, ShannonP$parameter, sequenceCountP$parameter, haplotypeCountP$parameter),
-  p_value = c(ZahlP$p.value, ShannonP$p.value, sequenceCountP$p.value, haplotypeCountP$p.value)
+  p_value = c(ZahlP$p.value, ShannonP$p.value, ChaoEstimateP$p.value,
+              sequenceCountP$p.value, haplotypeCountP$p.value)
   )
 
-  ###### c. mean plots ####
+  ###### d. mean plots ####
   # make the data sets for the statistics and for the sampling
 outCombined_plot_Stats <- outCombined_complete %>% 
   dplyr::mutate(rowNum = row_number()) %>%
   tidyr::pivot_longer(
-    cols =  c("Zahl", "Shannon", "haplotypeCount", "sequenceCount")) %>%
-  dplyr::filter(name %in% c("Zahl", "Shannon"))
+    cols =  c("Zahl", "Shannon", "log_ChaoEstimate", "haplotypeCount", "sequenceCount")) %>%
+  dplyr::filter(name %in% c("Zahl", "Shannon", "log_ChaoEstimate"))
   # sampling
 outCombined_plot_Sampling <- outCombined_complete %>% 
   dplyr::mutate(rowNum = row_number()) %>%
   tidyr::pivot_longer(
-    cols =  c("Zahl", "Shannon", "haplotypeCount", "sequenceCount")) %>%
+    cols =  c("Zahl", "Shannon", "log_ChaoEstimate", "haplotypeCount", "sequenceCount")) %>%
   dplyr::filter(name %in% c("haplotypeCount", "sequenceCount"))
 
   # Statistic plot
@@ -283,7 +308,8 @@ statPlot <- ggplot2::ggplot(outCombined_plot_Stats,
                  panel.background = ggplot2::element_rect(fill = "transparent",
                                                           colour = "black",
                                                           linetype = NULL)) +
-  ggplot2::scale_fill_manual(values = c("#E97777", "#82AAE3"))
+  ggplot2::scale_fill_manual(values = c("#E97777", "#82AAE3")) +
+  ggplot2::scale_x_discrete(labels = c("log(Chao)", "Shannon", "Zahl"))
 # Sampling plot
 samplePlot <- ggplot2::ggplot(outCombined_plot_Sampling, aes(x= name, y= log(value), fill=WolbachiaDetected)) + 
   ggplot2::geom_boxplot() +
@@ -297,7 +323,7 @@ samplePlot <- ggplot2::ggplot(outCombined_plot_Sampling, aes(x= name, y= log(val
 legendPlot <- ggplot2::ggplot(outCombined_complete %>% 
                   dplyr::mutate(rowNum = row_number()) %>%
                   tidyr::pivot_longer(
-                    cols =  c("Zahl", "Shannon", "haplotypeCount", "sequenceCount")), 
+                    cols =  c("log_ChaoEstimate", "Zahl", "Shannon", "haplotypeCount", "sequenceCount")), 
                 aes(x= name, y= value, fill=WolbachiaDetected)) + 
   ggplot2::geom_boxplot() +
   ggplot2::xlab("Wolbachia infection status") + ggplot2::ylab("Log of count") +
@@ -314,7 +340,7 @@ cowplot::plot_grid(statPlot, samplePlot, cowplot::get_legend(legendPlot), ncol =
   cowplot::save_plot(filename = "DiversityPlot.pdf", plot = ., base_width = 8, base_height = 3.5)
 
 
-###### d. explore Wolbachia infections ####
+###### e. explore Wolbachia infections ####
 
 WolTested <- matched %>%
   # !!! OPTIONAL filter to ONLY Wolbachia individuals
@@ -328,18 +354,22 @@ WolTested <- matched %>%
   dplyr::distinct(Species_name, .keep_all = TRUE) %>% 
   dplyr::select(Species_name, percentInfected, sampleSize)
 
-  ###### e. linear models ####
-
-TEST <- kruskal.test(Zahl ~ WolbachiaDetected, data = outCombined)
-
+  ###### f. linear models ####
 install.packages("Rfit")
   # Linear models
   # Zahl
-Zahl_lm <- Rfit::rfit(formula = Zahl ~ haplotypeCount + sequenceCount + WolbachiaDetected, data = outCombined)
+Zahl_lm <- Rfit::rfit(formula = Zahl ~ haplotypeCount + sequenceCount + WolbachiaDetected, 
+                      data = outCombined)
 summary(Zahl_lm)
   # Shannon
-Shannon_lm <- rfit(formula = Shannon ~ haplotypeCount + sequenceCount + WolbachiaDetected, data = outCombined)
+Shannon_lm <- Rfit::rfit(formula = Shannon ~ haplotypeCount + sequenceCount + WolbachiaDetected, 
+                   data = outCombined)
 summary(Shannon_lm)
+  # Chao
+Chao_lm <- Rfit::rfit(formula = ChaoEstimate ~ haplotypeCount + sequenceCount + WolbachiaDetected, 
+                data = outCombined)
+summary(Chao_lm)
+
 
   # PLOTS
 # Zahl plots
@@ -375,11 +405,29 @@ summary(Shannon_lm)
     ggplot2::scale_fill_manual(values = c("#FFC125", "#36648B")) +
     ggplot2::theme_classic() ) 
 
+# Chao plots
+(ChaoEstimate_haplo <- ggplot2::ggplot(outCombined, aes(x = haplotypeCount, y = ChaoEstimate)) +
+    ggplot2::geom_point(aes(colour = WolbachiaDetected)) +                                # scatter plot, coloured by sex
+    ggplot2::labs(x = "Haplotype count", y = "ChaoEstimate") +
+    ggplot2::stat_smooth(method = "lm", aes(fill = WolbachiaDetected, colour = WolbachiaDetected)) +    # adding regression lines for each sex
+    ggplot2::scale_colour_manual(values = c("#FFC125", "#36648B")) +
+    ggplot2::scale_fill_manual(values = c("#FFC125", "#36648B")) +
+    ggplot2::theme_classic() )
+(ChaoEstimate_sequence <- ggplot2::ggplot(outCombined, aes(x = sequenceCount, y = ChaoEstimate)) +
+    ggplot2::geom_point(aes(colour = WolbachiaDetected)) +                                # scatter plot, coloured by sex
+    ggplot2::labs(x = "Sequence count", y = "ChaoEstimate") +
+    ggplot2::stat_smooth(method = "lm", aes(fill = WolbachiaDetected, colour = WolbachiaDetected)) +    # adding regression lines for each sex
+    ggplot2::scale_colour_manual(values = c("#FFC125", "#36648B")) +
+    ggplot2::scale_fill_manual(values = c("#FFC125", "#36648B")) +
+    ggplot2::theme_classic() ) 
+
 cowplot::plot_grid(Zahl_haplo, Zahl_sequence,
                    Shannon_haplo, Shannon_sequence, 
-                   ncol = 2, labels = c("a", "b", "c", "d")) %>%
+                   ChaoEstimate_haplo, ChaoEstimate_sequence,
+                   ncol = 2, labels = c("a", "b", "c", "d", "e", "f")) %>%
   cowplot::save_plot(filename = "diversity_sampling.pdf", plot = ., 
-                     base_width = 15, base_height = 10)
+                     base_width = 15, base_height = 15)
+
 
 #### 2. Maps ####
   ##### 2.1 prepare data ####
