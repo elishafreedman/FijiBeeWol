@@ -286,6 +286,8 @@ W_testOutput <- tibble::tibble(
               sequenceCountP$p.value, haplotypeCountP$p.value)
   )
 
+readr::write_csv(W_testOutput, "W_testOutput.csv")
+
   ###### d. mean plots ####
   # make the data sets for the statistics and for the sampling
 outCombined_plot_Stats <- outCombined_complete %>% 
@@ -455,11 +457,11 @@ summary(infectionDiv_lm)
 
 shapiro.test( WolTested_3$percentInfected)
 shapiro.test( WolTested_3$sampleSize)
-shapiro.test( WolTested$ChaoEstimate())
+shapiro.test( WolTested$ChaoEstimate)
 shapiro.test( WolTested_3$Zahl )
 
 
-cor.test(x= WolTested_3$percentInfected, y = WolTested_3$sampleSize, method = "pearson",
+cor.test(x= WolTested_3$percentInfected, y = WolTested_3$sampleSize, method = "spearm",
          data = WolTested_3, alternative = "two.sided")
 cor.test(x= WolTested_3$percentInfected, y = WolTested_3$Zahl, method = "spearm",
          data = WolTested_3, alternative = "less")
@@ -611,15 +613,15 @@ areaPlus <- WolTested %>%
 shapiro.test( areaPlus$polygonArea_m2 )
 hist(areaPlus$polygonArea_m2)
 
-  # Simpl correlation between area and percentInfected
+  # Simple correlation between area and percentInfected
   # We expect a positive relatinoship
-cor.test(x= areaPlus$percentInfected, y = areaPlus$polygonArea_m2, method = "pearson",
+cor.test(x = areaPlus$percentInfected, y = areaPlus$polygonArea_m2, method = "pearson",
          data = areaPlus, alternative = "greater")
   # test area and diversity
-cor.test(x= areaPlus$Zahl, y = areaPlus$polygonArea_m2, method = "pearson",
+cor.test(x = areaPlus$Zahl, y = areaPlus$polygonArea_m2, method = "pearson",
          data = areaPlus, alternative = "greater")
 # test area and richness
-cor.test(x= areaPlus$ChaoEstimate, y = areaPlus$polygonArea_m2, method = "pearson",
+cor.test(x = areaPlus$ChaoEstimate, y = areaPlus$polygonArea_m2, method = "pearson",
          data = areaPlus, alternative = "greater")
 
 
