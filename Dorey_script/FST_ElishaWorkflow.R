@@ -246,6 +246,7 @@ outCombined_longer <- outCombined %>%
   # Remove NA from outCombined
 outCombined_complete <- outCombined %>%
   dplyr::filter(!c(is.na(Zahl) | is.na(Shannon)| Zahl == 0 | Shannon == 0 ) )
+  readr::write_csv(outCombined_complete, "outCombined_complete.csv")
 
 # Test normality
 shapiro.test(outCombined_complete$Zahl)
@@ -340,38 +341,25 @@ cowplot::plot_grid(statPlot, samplePlot, cowplot::get_legend(legendPlot), ncol =
   cowplot::save_plot(filename = "DiversityPlot.pdf", plot = ., base_width = 8, base_height = 3.5)
 
 
-###### e. explore Wolbachia infections ####
 
-WolTested <- matched %>%
-  # !!! OPTIONAL filter to ONLY Wolbachia individuals
-  dplyr::filter(Specimen_code %in% wolbachiaInfected$seqCode) %>%
-  dplyr::left_join(wolbachiaInfected %>%
-                     dplyr::distinct(seqCode, .keep_all = TRUE),
-                   by = c("Specimen_code" = "seqCode")) %>%
-  dplyr::group_by(Species_name) %>%
-  dplyr::mutate(percentInfected = round((sum(WolbachiaPositive)/dplyr::n())*100, 0) ,
-                sampleSize = dplyr::n()) %>%
-  dplyr::distinct(Species_name, .keep_all = TRUE) %>% 
-  dplyr::select(Species_name, percentInfected, sampleSize)
-
-  ###### f. linear models ####
+###### e. linear models ####
 install.packages("Rfit")
-  # Linear models
-  # Zahl
+# Linear models
+# Zahl
 Zahl_lm <- Rfit::rfit(formula = Zahl ~ haplotypeCount + sequenceCount + WolbachiaDetected, 
                       data = outCombined)
 summary(Zahl_lm)
-  # Shannon
+# Shannon
 Shannon_lm <- Rfit::rfit(formula = Shannon ~ haplotypeCount + sequenceCount + WolbachiaDetected, 
-                   data = outCombined)
+                         data = outCombined)
 summary(Shannon_lm)
-  # Chao
+# Chao
 Chao_lm <- Rfit::rfit(formula = ChaoEstimate ~ haplotypeCount + sequenceCount + WolbachiaDetected, 
-                data = outCombined)
+                      data = outCombined)
 summary(Chao_lm)
 
 
-  # PLOTS
+# PLOTS
 # Zahl plots
 (Zahl_haplo <- ggplot2::ggplot(outCombined, aes(x = haplotypeCount, y = Zahl)) +
     ggplot2::geom_point(aes(colour = WolbachiaDetected)) +                                # scatter plot, coloured by sex
@@ -427,6 +415,104 @@ cowplot::plot_grid(Zahl_haplo, Zahl_sequence,
                    ncol = 2, labels = c("a", "b", "c", "d", "e", "f")) %>%
   cowplot::save_plot(filename = "diversity_sampling.pdf", plot = ., 
                      base_width = 15, base_height = 15)
+
+
+###### f. explore Wolbachia infections ####
+# Find wolbachia-tested species
+wolTestedSp <- matched %>% 
+  dplyr::filter(Specimen_code %in% wolbachiaInfected$seqCode) %>%
+  dplyr::distinct(Species_name)
+
+
+WolTested <- matched %>%
+  # !!! OPTIONAL filter to ONLY Wolbachia individuals
+  #dplyr::filter(Specimen_code %in% wolbachiaInfected$seqCode) %>%
+  dplyr::left_join(wolbachiaInfected %>%
+                     dplyr::distinct(seqCode, .keep_all = TRUE),
+                   by = c("Specimen_code" = "seqCode")) %>%
+  dplyr::group_by(Species_name) %>%
+  dplyr::mutate(percentInfected = round((sum(WolbachiaPositive, na.rm = TRUE)/dplyr::n())*100, 0) ,
+                sampleSize = dplyr::n()) %>%
+  dplyr::distinct(Species_name, .keep_all = TRUE) %>% 
+  dplyr::select(Species_name, percentInfected, sampleSize) %>%
+  # Merge with statistics
+  dplyr::left_join(outCombined_complete, by = "Species_name")
+
+# Get species with n >= 3 and ONLY for wolbachia-tested species
+WolTested_3 <- WolTested %>%
+  dplyr::filter(sampleSize > 2) %>%
+  dplyr::filter(Species_name %in% wolTestedSp$Species_name)
+
+# infection and sample size + richness
+infection_lm <- Rfit::rfit(formula = percentInfected ~ sampleSize + ChaoEstimate, 
+                      data = WolTested_3)
+summary(infection_lm)
+
+# infection and diversity + richness
+infectionDiv_lm <- Rfit::rfit(formula = percentInfected ~ Zahl + ChaoEstimate, 
+                           data = WolTested_3)
+summary(infectionDiv_lm)
+
+shapiro.test( WolTested_3$percentInfected)
+shapiro.test( WolTested_3$sampleSize)
+shapiro.test( WolTested$ChaoEstimate())
+shapiro.test( WolTested_3$Zahl )
+
+
+cor.test(x= WolTested_3$percentInfected, y = WolTested_3$sampleSize, method = "pearson",
+         data = WolTested_3, alternative = "two.sided")
+cor.test(x= WolTested_3$percentInfected, y = WolTested_3$Zahl, method = "spearm",
+         data = WolTested_3, alternative = "less")
+cor.test(x= WolTested_3$percentInfected, y = WolTested_3$Shannon, method = "spearm",
+         data = WolTested_3, alternative = "two.sided")
+cor.test(x= WolTested_3$percentInfected, y = WolTested_3$ChaoEstimate, method = "spearm",
+         data = WolTested_3, alternative = "less")
+
+par(mfrow = c(2, 2))
+plot(WolTested_3$percentInfected, WolTested_3$sampleSize)
+plot(WolTested_3$percentInfected, WolTested_3$Zahl)
+plot(WolTested_3$percentInfected, WolTested_3$Shannon)
+plot(WolTested_3$percentInfected, WolTested_3$ChaoEstimate)
+
+  # Diversity vs richness
+DivRich <- WolTested %>%
+  dplyr::filter(!is.na(WolbachiaDetected)) 
+
+cor.test(x= DivRich$Zahl, y = DivRich$ChaoEstimate, method = "spearm",
+         data = DivRich, alternative = "two.sided")
+# Diversity and richness
+DivRich_lm <- Rfit::rfit(formula = Zahl ~ ChaoEstimate + WolbachiaDetected, 
+                         data = DivRich)
+summary(DivRich_lm)
+
+  # Plot pattern
+(DivRich_fijiensis <- ggplot2::ggplot(DivRich, aes(x = ChaoEstimate, y = Zahl)) +
+    ggplot2::geom_point(aes(colour = WolbachiaDetected)) +                                # scatter plot, coloured by sex
+    ggplot2::labs(x = "Chao Estimate", y = "Zahl") +
+    ggplot2::stat_smooth(method = "lm", formula = y ~ log(x),
+                         aes(fill = WolbachiaDetected, colour = WolbachiaDetected)) +    # adding regression lines for each sex
+    ggplot2::scale_colour_manual(values = c("#FFC125", "#36648B")) +
+    ggplot2::scale_fill_manual(values = c("#FFC125", "#36648B")) +
+    ggplot2::theme_classic() ) 
+(DivRich_noFijiensis <- ggplot2::ggplot(DivRich %>%
+                                          dplyr::filter(!stringr::str_detect(Species_name, "fijiensis")),
+                                        aes(x = ChaoEstimate, y = Zahl)) +
+    ggplot2::geom_point(aes(colour = WolbachiaDetected)) +                                # scatter plot, coloured by sex
+    ggplot2::labs(x = "Chao Estimate", y = "Zahl") +
+    ggplot2::stat_smooth(method = "lm", formula = y ~ log(x), 
+                         aes(fill = WolbachiaDetected, colour = WolbachiaDetected)) +    # adding regression lines for each sex
+    ggplot2::scale_colour_manual(values = c("#FFC125", "#36648B")) +
+    ggplot2::scale_fill_manual(values = c("#FFC125", "#36648B")) +
+    ggplot2::theme_classic() ) 
+
+cowplot::plot_grid(DivRich_fijiensis, DivRich_noFijiensis,
+                   ncol = 2, labels = c("a", "b")) %>%
+  cowplot::save_plot(filename = "DivRich.pdf", plot = ., 
+                     base_width = 15, base_height = 7)
+
+
+
+
 
 
 #### 2. Maps ####
@@ -492,8 +578,64 @@ FjRasterPointMapR(
   mapAlpha = 0.8,
   mapTitle = "Fijian Homalictus occurrences")
 
+##### 2.3 Convex hulls ####
+  ###### a. get areas ####
+  # Make a vector of each species name
+fijiSpecies <- unique(fijiPoints$Species_name)
+  # Create an empty tibble
+loopTibble <- tibble::tibble(Species_name = NA_character_,
+                             polygonArea_m2 = NA_integer_)
 
-##### 2.3 OLD vector maps ####
+for(i in 1:length(unique(fijiPoints$Species_name))){
+    # select the points for the ith species
+  sp_i <- fijiPoints %>%
+    dplyr::filter(Species_name == fijiSpecies[[i]])
+    # Get the polygon area for that species
+  polygonArea_i <- sf::st_convex_hull(sp_i %>% sf::st_union()) %>% sf::st_area() %>%
+    as.double()
+    # add to loop tibble
+  loopTibble <- loopTibble %>%
+    dplyr::bind_rows( tibble::tibble(Species_name = fijiSpecies[[i]],
+                                     polygonArea_m2 = polygonArea_i/1000000))
+}# Finish loop
+
+
+  ###### b. combine data ####
+areaPlus <- WolTested %>%
+  dplyr::left_join(loopTibble, by = "Species_name") %>%
+    # select only wolbachia-tested species
+  dplyr::filter(Species_name %in% wolTestedSp$Species_name)
+
+  ###### c. run tests ####
+  # Test area normality _ NOT normal
+shapiro.test( areaPlus$polygonArea_m2 )
+hist(areaPlus$polygonArea_m2)
+
+  # Simpl correlation between area and percentInfected
+  # We expect a positive relatinoship
+cor.test(x= areaPlus$percentInfected, y = areaPlus$polygonArea_m2, method = "pearson",
+         data = areaPlus, alternative = "greater")
+  # test area and diversity
+cor.test(x= areaPlus$Zahl, y = areaPlus$polygonArea_m2, method = "pearson",
+         data = areaPlus, alternative = "greater")
+# test area and richness
+cor.test(x= areaPlus$ChaoEstimate, y = areaPlus$polygonArea_m2, method = "pearson",
+         data = areaPlus, alternative = "greater")
+
+
+
+
+# infection and sample richness, diversity, area
+areaInfRate_lm <- Rfit::rfit(formula = percentInfected ~ ChaoEstimate + Zahl + polygonArea_m2, 
+                           data = areaPlus)
+summary(areaInfRate_lm)
+# area and sample richness, diversity
+areaDivRich_lm <- Rfit::rfit(formula = polygonArea_m2 ~ ChaoEstimate + Zahl + WolbachiaDetected, 
+                             data = areaPlus)
+summary(areaDivRich_lm)
+
+
+##### 2.X OLD vector maps ####
   ###### a. species-level ####
   # Load in the mapping function
 source(paste0(RootPath, "/FjPointMapR.R"))
