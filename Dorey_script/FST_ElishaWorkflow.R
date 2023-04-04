@@ -306,7 +306,7 @@ outCombined_plot_Sampling <- outCombined_complete %>%
 statPlot <- ggplot2::ggplot(outCombined_plot_Stats, 
                             aes(x= name, y=value, fill=WolbachiaDetected)) + 
   ggplot2::geom_boxplot() +
-  ggplot2::xlab("Wolbachia infection status") + ggplot2::ylab("Diversity/richness value") +
+  ggplot2::xlab("") + ggplot2::ylab("Diversity/richness value") +
   ggplot2::theme(legend.position = "none",
                  panel.background = ggplot2::element_rect(fill = "transparent",
                                                           colour = "black",
@@ -317,7 +317,7 @@ statPlot <- ggplot2::ggplot(outCombined_plot_Stats,
 # Sampling plot
 samplePlot <- ggplot2::ggplot(outCombined_plot_Sampling, aes(x= name, y= log(value), fill=WolbachiaDetected)) + 
   ggplot2::geom_boxplot() +
-  ggplot2::xlab("Wolbachia infection status") + ggplot2::ylab("Log of count") +
+  ggplot2::xlab("") + ggplot2::ylab("Log of count") +
   ggplot2::theme(legend.position = "none",
                  panel.background = ggplot2::element_rect(fill = "transparent",
                                                           colour = "black",
@@ -330,7 +330,7 @@ legendPlot <- ggplot2::ggplot(outCombined_complete %>%
                     cols =  c("log_ChaoEstimate", "Zahl", "Shannon", "haplotypeCount", "sequenceCount")), 
                 aes(x= name, y= value, fill=WolbachiaDetected)) + 
   ggplot2::geom_boxplot() +
-  ggplot2::xlab("Wolbachia infection status") + ggplot2::ylab("Log of count") +
+  ggplot2::xlab("") + ggplot2::ylab("Log of count") +
   ggplot2::theme(legend.position = "right",
                  panel.background = ggplot2::element_rect(fill = "transparent",
                                                           colour = "black",
@@ -370,14 +370,20 @@ summary(Chao_lm)
     ggplot2::stat_smooth(method = "lm", aes(fill = WolbachiaDetected, colour = WolbachiaDetected)) +    # adding regression lines for each sex
     ggplot2::scale_colour_manual(values = c("#FFC125", "#36648B")) +
     ggplot2::scale_fill_manual(values = c("#FFC125", "#36648B")) +
-    ggplot2::theme_classic() )
+    ggplot2::theme(legend.position = c(0.2,0.8),
+                   panel.background = ggplot2::element_rect(fill = "transparent",
+                                                            colour = "black",
+                                                            linetype = NULL)) )
 (Zahl_sequence <- ggplot2::ggplot(outCombined, aes(x = sequenceCount, y = Zahl)) +
     ggplot2::geom_point(aes(colour = WolbachiaDetected)) +                                # scatter plot, coloured by sex
     ggplot2::labs(x = "Sequence count", y = "Zahl") +
     ggplot2::stat_smooth(method = "lm", aes(fill = WolbachiaDetected, colour = WolbachiaDetected)) +    # adding regression lines for each sex
     ggplot2::scale_colour_manual(values = c("#FFC125", "#36648B")) +
     ggplot2::scale_fill_manual(values = c("#FFC125", "#36648B")) +
-    ggplot2::theme_classic() )
+    ggplot2::theme(legend.position = "none",
+                   panel.background = ggplot2::element_rect(fill = "transparent",
+                                                            colour = "black",
+                                                            linetype = NULL)) )
 
 
 # Shannon plots
@@ -387,14 +393,20 @@ summary(Chao_lm)
     ggplot2::stat_smooth(method = "lm", aes(fill = WolbachiaDetected, colour = WolbachiaDetected)) +    # adding regression lines for each sex
     ggplot2::scale_colour_manual(values = c("#FFC125", "#36648B")) +
     ggplot2::scale_fill_manual(values = c("#FFC125", "#36648B")) +
-    ggplot2::theme_classic() )
+    ggplot2::theme(legend.position = "none",
+                   panel.background = ggplot2::element_rect(fill = "transparent",
+                                                            colour = "black",
+                                                            linetype = NULL)) )
 (Shannon_sequence <- ggplot2::ggplot(outCombined, aes(x = sequenceCount, y = Shannon)) +
     ggplot2::geom_point(aes(colour = WolbachiaDetected)) +                                # scatter plot, coloured by sex
     ggplot2::labs(x = "Sequence count", y = "Shannon") +
     ggplot2::stat_smooth(method = "lm", aes(fill = WolbachiaDetected, colour = WolbachiaDetected)) +    # adding regression lines for each sex
     ggplot2::scale_colour_manual(values = c("#FFC125", "#36648B")) +
     ggplot2::scale_fill_manual(values = c("#FFC125", "#36648B")) +
-    ggplot2::theme_classic() ) 
+    ggplot2::theme(legend.position = "none",
+                   panel.background = ggplot2::element_rect(fill = "transparent",
+                                                            colour = "black",
+                                                            linetype = NULL)) ) 
 
 # Chao plots
 (ChaoEstimate_haplo <- ggplot2::ggplot(outCombined, aes(x = haplotypeCount, y = ChaoEstimate)) +
@@ -403,21 +415,45 @@ summary(Chao_lm)
     ggplot2::stat_smooth(method = "lm", aes(fill = WolbachiaDetected, colour = WolbachiaDetected)) +    # adding regression lines for each sex
     ggplot2::scale_colour_manual(values = c("#FFC125", "#36648B")) +
     ggplot2::scale_fill_manual(values = c("#FFC125", "#36648B")) +
-    ggplot2::theme_classic() )
+    ggplot2::theme(legend.position = "none",
+                   panel.background = ggplot2::element_rect(fill = "transparent",
+                                                            colour = "black",
+                                                            linetype = NULL)) )
 (ChaoEstimate_sequence <- ggplot2::ggplot(outCombined, aes(x = sequenceCount, y = ChaoEstimate)) +
     ggplot2::geom_point(aes(colour = WolbachiaDetected)) +                                # scatter plot, coloured by sex
     ggplot2::labs(x = "Sequence count", y = "ChaoEstimate") +
     ggplot2::stat_smooth(method = "lm", aes(fill = WolbachiaDetected, colour = WolbachiaDetected)) +    # adding regression lines for each sex
     ggplot2::scale_colour_manual(values = c("#FFC125", "#36648B")) +
     ggplot2::scale_fill_manual(values = c("#FFC125", "#36648B")) +
-    ggplot2::theme_classic() ) 
+    ggplot2::theme(legend.position = "none",
+                   panel.background = ggplot2::element_rect(fill = "transparent",
+                                                            colour = "black",
+                                                            linetype = NULL)) ) 
+
+# Legend
+#legendPlot <- ggplot2::ggplot(outCombined, 
+#                             aes(x= sequenceCount, y= WolbachiaDetected, fill=WolbachiaDetected)) + 
+# ggplot2::stat_smooth(aes(fill = WolbachiaDetected, colour = WolbachiaDetected)) +
+# ggplot2::xlab("") + ggplot2::ylab("Log of count") +
+# ggplot2::theme(legend.position = "right",
+#                panel.background = ggplot2::element_rect(fill = "transparent",
+#                                                         colour = "black",
+#                                                         linetype = NULL)) +
+#   ggplot2::scale_colour_manual(name = "Infection status",
+#                                values = c("#FFC125", "#36648B"),
+#                                labels = c("Infected", "Unknown")) +
+#   ggplot2::scale_fill_manual(name = "Infection status", 
+#                              values = c("#FFC125", "#36648B"),
+#                              labels = c("Infected", "Unknown")))
+#   
 
 cowplot::plot_grid(Zahl_haplo, Zahl_sequence,
                    Shannon_haplo, Shannon_sequence, 
                    ChaoEstimate_haplo, ChaoEstimate_sequence,
-                   ncol = 2, labels = c("a", "b", "c", "d", "e", "f")) %>%
+                   #cowplot::get_legend(legendPlot),
+                   ncol = 2, labels = c("a", "b", "c", "d", "e", "f", "")) %>%
   cowplot::save_plot(filename = "diversity_sampling.pdf", plot = ., 
-                     base_width = 15, base_height = 15)
+                     base_width = 10, base_height = 10)
 
 
 ###### f. explore Wolbachia infections ####
@@ -448,12 +484,12 @@ WolTested_3 <- WolTested %>%
 
 # infection and sample size + richness
 infection_lm <- Rfit::rfit(formula = percentInfected ~ sampleSize + ChaoEstimate, 
-                      data = WolTested_3)
+                      data = WolTested)
 summary(infection_lm)
 
 # infection and diversity + richness
 infectionDiv_lm <- Rfit::rfit(formula = percentInfected ~ Zahl + ChaoEstimate, 
-                           data = WolTested_3)
+                           data = WolTested)
 summary(infectionDiv_lm)
 
 shapiro.test( WolTested_3$percentInfected)
@@ -465,11 +501,11 @@ shapiro.test( WolTested_3$Zahl )
 cor.test(x= WolTested_3$percentInfected, y = WolTested_3$sampleSize, method = "spearm",
          data = WolTested_3, alternative = "two.sided")
 cor.test(x= WolTested_3$percentInfected, y = WolTested_3$Zahl, method = "spearm",
-         data = WolTested_3, alternative = "less")
+         data = WolTested_3, alternative = "two.sided")
 cor.test(x= WolTested_3$percentInfected, y = WolTested_3$Shannon, method = "spearm",
          data = WolTested_3, alternative = "two.sided")
 cor.test(x= WolTested_3$percentInfected, y = WolTested_3$ChaoEstimate, method = "spearm",
-         data = WolTested_3, alternative = "less")
+         data = WolTested_3, alternative = "two.sided")
 
 par(mfrow = c(2, 2))
 plot(WolTested_3$percentInfected, WolTested_3$sampleSize)
@@ -496,7 +532,10 @@ summary(DivRich_lm)
                          aes(fill = WolbachiaDetected, colour = WolbachiaDetected)) +    # adding regression lines for each sex
     ggplot2::scale_colour_manual(values = c("#FFC125", "#36648B")) +
     ggplot2::scale_fill_manual(values = c("#FFC125", "#36648B")) +
-    ggplot2::theme_classic() ) 
+    ggplot2::theme(legend.position = c(0.2,0.9),
+                   panel.background = ggplot2::element_rect(fill = "transparent",
+                                                            colour = "black",
+                                                            linetype = NULL)) ) 
 (DivRich_noFijiensis <- ggplot2::ggplot(DivRich %>%
                                           dplyr::filter(!stringr::str_detect(Species_name, "fijiensis")),
                                         aes(x = ChaoEstimate, y = Zahl)) +
@@ -506,12 +545,15 @@ summary(DivRich_lm)
                          aes(fill = WolbachiaDetected, colour = WolbachiaDetected)) +    # adding regression lines for each sex
     ggplot2::scale_colour_manual(values = c("#FFC125", "#36648B")) +
     ggplot2::scale_fill_manual(values = c("#FFC125", "#36648B")) +
-    ggplot2::theme_classic() ) 
-
+    ggplot2::theme(legend.position = "none",
+                   panel.background = ggplot2::element_rect(fill = "transparent",
+                                                            colour = "black",
+                                                            linetype = NULL)) ) 
 cowplot::plot_grid(DivRich_fijiensis, DivRich_noFijiensis,
+                   #cowplot::get_legend(legendPlot_DivRich),
                    ncol = 2, labels = c("a", "b")) %>%
   cowplot::save_plot(filename = "DivRich.pdf", plot = ., 
-                     base_width = 15, base_height = 7)
+                     base_width = 10, base_height = 5)
 
 
 
@@ -616,13 +658,13 @@ hist(areaPlus$polygonArea_m2)
 
   # Simple correlation between area and percentInfected
   # We expect a positive relatinoship
-cor.test(x = areaPlus$percentInfected, y = areaPlus$polygonArea_m2, method = "pearson",
+cor.test(x = areaPlus$percentInfected, y = areaPlus$polygonArea_m2, method = "spearm",
          data = areaPlus, alternative = "greater")
   # test area and diversity
-cor.test(x = areaPlus$Zahl, y = areaPlus$polygonArea_m2, method = "pearson",
+cor.test(x = areaPlus$Zahl, y = areaPlus$polygonArea_m2, method = "spearm",
          data = areaPlus, alternative = "greater")
 # test area and richness
-cor.test(x = areaPlus$ChaoEstimate, y = areaPlus$polygonArea_m2, method = "pearson",
+cor.test(x = areaPlus$ChaoEstimate, y = areaPlus$polygonArea_m2, method = "spearm",
          data = areaPlus, alternative = "greater")
 
 
