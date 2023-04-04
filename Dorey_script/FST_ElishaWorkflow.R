@@ -306,13 +306,14 @@ outCombined_plot_Sampling <- outCombined_complete %>%
 statPlot <- ggplot2::ggplot(outCombined_plot_Stats, 
                             aes(x= name, y=value, fill=WolbachiaDetected)) + 
   ggplot2::geom_boxplot() +
-  ggplot2::xlab("Wolbachia infection status") + ggplot2::ylab("Diversity statistic") +
+  ggplot2::xlab("Wolbachia infection status") + ggplot2::ylab("Diversity/richness value") +
   ggplot2::theme(legend.position = "none",
                  panel.background = ggplot2::element_rect(fill = "transparent",
                                                           colour = "black",
                                                           linetype = NULL)) +
   ggplot2::scale_fill_manual(values = c("#E97777", "#82AAE3")) +
-  ggplot2::scale_x_discrete(labels = c("log(Chao)", "Shannon", "Zahl"))
+  ggplot2::scale_x_discrete(limits = c("Zahl", "Shannon", "log_ChaoEstimate"),
+                            labels = c("Zahl", "Shannon", "log(Chao)"))
 # Sampling plot
 samplePlot <- ggplot2::ggplot(outCombined_plot_Sampling, aes(x= name, y= log(value), fill=WolbachiaDetected)) + 
   ggplot2::geom_boxplot() +
