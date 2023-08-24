@@ -11,7 +11,7 @@ setwd(RootPath)
 # Install reenv, IF NEEDED
 #install.packages("renv")
 renv::init() 
-
+#
 
 ##### 0.2 Install packages (if needed) #####
 # Install only those packages that are not already present in your system
@@ -175,8 +175,8 @@ source("ChaoWrapper.R")
 # Remove the row column
 FJHoma_haplotypes <- FJHoma_haplotypes %>%
   dplyr::select(!row)
-# cClculate diversity indices from ChaoSpecies
-ChaoResults <- ChaoWrapper(FJHoma_haplotypes = FJHoma_haplotypes)
+# Calculate diversity indices from ChaoSpecies
+ChaoResults <- ChaoWrapper(data = FJHoma_haplotypes)
 ChaoResults$basicTable %>% readr::write_csv("basicChaoOutputs.csv")
 ChaoResults$diversityTable %>% readr::write_csv("diversityChaoOutputs.csv")
   # Get the estimates of Chao1

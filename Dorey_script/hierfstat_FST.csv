@@ -1,0 +1,19 @@
+"","Lasioglossum (Homalictus) ostridorsum","Lasioglossum (Homalictus) atritergus","Lasioglossum (Homalictus) fijiensis","Lasioglossum (Homalictus) hadrander","Lasioglossum (Homalictus) tuiwawae","Lasioglossum (Homalictus) concavus","Lasioglossum (Homalictus) kaicolo","Lasioglossum (Homalictus) nadarivatu","Lasioglossum (Homalictus) sp. S","Lasioglossum (Homalictus) terminalis","Lasioglossum (Homalictus) sp. G","Lasioglossum (Homalictus) sp. T","Lasioglossum (Homalictus) sp. U","Lasioglossum (Homalictus) sp. X","Lasioglossum (Homalictus) sp. V","Lasioglossum (Homalictus) sp. O","Lasioglossum (Homalictus) groomi","Lasioglossum (Homalictus) taveuni"
+"Lasioglossum (Homalictus) ostridorsum",NA,0.102,0.156,0.084,0.087,0.147,0.17,0.13,0.117,0.048,-0.011,0.079,0.128,0.056,0.018,0.397,0.167,0.356
+"Lasioglossum (Homalictus) atritergus",0.102,NA,0.398,0.311,0.275,0.384,0.206,0.381,0.287,0.248,0.152,0.136,0.204,0.197,0.125,0.679,0.405,0.653
+"Lasioglossum (Homalictus) fijiensis",0.156,0.398,NA,0.012,0.128,-0.004,0.326,-0.026,0.089,0.093,0.053,0.248,0.272,0.177,0.133,0.087,0.052,0.018
+"Lasioglossum (Homalictus) hadrander",0.084,0.311,0.012,NA,0.101,-0.007,0.257,0.001,0.062,0.042,-0.015,0.178,0.221,0.12,0.064,0.127,0.064,0.077
+"Lasioglossum (Homalictus) tuiwawae",0.087,0.275,0.128,0.101,NA,0.151,0.18,0.064,0.119,0.037,-0.066,0.08,0.108,0.032,-0.019,0.389,0.089,0.345
+"Lasioglossum (Homalictus) concavus",0.147,0.384,-0.004,-0.007,0.151,NA,0.294,-0.032,0.068,0.102,0.052,0.22,0.256,0.171,0.123,0.088,0.072,0.024
+"Lasioglossum (Homalictus) kaicolo",0.17,0.206,0.326,0.257,0.18,0.294,NA,0.288,0.182,0.192,-0.046,-0.048,0.026,0.101,-0.06,0.584,0.323,0.548
+"Lasioglossum (Homalictus) nadarivatu",0.13,0.381,-0.026,0.001,0.064,-0.032,0.288,NA,0.059,0.071,0.016,0.184,0.203,0.119,0.077,0.121,0.038,0.048
+"Lasioglossum (Homalictus) sp. S",0.117,0.287,0.089,0.062,0.119,0.068,0.182,0.059,NA,0.075,-0.009,0.13,0.17,0.116,0.04,0.243,0.128,0.194
+"Lasioglossum (Homalictus) terminalis",0.048,0.248,0.093,0.042,0.037,0.102,0.192,0.071,0.075,NA,-0.156,0.116,0.157,0.051,-0.011,0.335,0.09,0.282
+"Lasioglossum (Homalictus) sp. G",-0.011,0.152,0.053,-0.015,-0.066,0.052,-0.046,0.016,-0.009,-0.156,NA,-0.058,0.008,-0.048,-0.225,0.319,0.039,0.261
+"Lasioglossum (Homalictus) sp. T",0.079,0.136,0.248,0.178,0.08,0.22,-0.048,0.184,0.13,0.116,-0.058,NA,-0.052,-0.015,-0.124,0.528,0.255,0.493
+"Lasioglossum (Homalictus) sp. U",0.128,0.204,0.272,0.221,0.108,0.256,0.026,0.203,0.17,0.157,0.008,-0.052,NA,0.049,-0.055,0.545,0.272,0.511
+"Lasioglossum (Homalictus) sp. X",0.056,0.197,0.177,0.12,0.032,0.171,0.101,0.119,0.116,0.051,-0.048,-0.015,0.049,NA,-0.066,0.448,0.179,0.41
+"Lasioglossum (Homalictus) sp. V",0.018,0.125,0.133,0.064,-0.019,0.123,-0.06,0.077,0.04,-0.011,-0.225,-0.124,-0.055,-0.066,NA,0.401,0.132,0.355
+"Lasioglossum (Homalictus) sp. O",0.397,0.679,0.087,0.127,0.389,0.088,0.584,0.121,0.243,0.335,0.319,0.528,0.545,0.448,0.401,NA,0.244,0.027
+"Lasioglossum (Homalictus) groomi",0.167,0.405,0.052,0.064,0.089,0.072,0.323,0.038,0.128,0.09,0.039,0.255,0.272,0.179,0.132,0.244,NA,0.187
+"Lasioglossum (Homalictus) taveuni",0.356,0.653,0.018,0.077,0.345,0.024,0.548,0.048,0.194,0.282,0.261,0.493,0.511,0.41,0.355,0.027,0.187,NA

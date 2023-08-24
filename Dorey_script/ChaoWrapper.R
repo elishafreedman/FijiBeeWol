@@ -2,7 +2,7 @@
 # and output table for multiple species at once
 
 ChaoWrapper <- function(
-    FJHoma_haplotypes = NULL){
+    data = NULL){
 
 # Duplicate a function within ChaoSpecies to not run data-poor species
 f <- function(i, data) {
@@ -17,9 +17,9 @@ diversityTable <- tibble::tibble(species = character(),
                                  '95%Lower' = numeric(),
                                  '95%Upper' = numeric())
 basicTable <- tibble::tibble()
-for(i in 1:ncol(FJHoma_haplotypes)){
+for(i in 1:ncol(data)){
   # choose the data for the first species
-  inputData_i <- FJHoma_haplotypes[,i]
+  inputData_i <- data[,i]
   # Don't run species where there are no counts that are less than k
   # i.e. ONLY run species that won't throw an error due to weird/poor cases of data
   if(any(inputData_i[[1]] > 0 & inputData_i[[1]] < 5) & 
