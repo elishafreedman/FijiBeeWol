@@ -10,7 +10,7 @@ RootPath <- "/Users/jamesdorey/Desktop/Uni/My_papers/Elisha_Hons_paper/Honours/D
 setwd(RootPath)
 # Install reenv, IF NEEDED
 #install.packages("renv")
-renv::init() 
+renv::init(project = RootPath) 
 #
 
 ##### 0.2 Install packages (if needed) #####
@@ -19,7 +19,7 @@ renv::init()
 # You may need to install gdal on your computer. This can be done on mac by using
 # Homebrew in the terminal and the command "brew install gdal"
 list.of.packages <- c("pegas",
-                      "apex",
+                      #"apex",
                       "geodata",
                       "dplyr",             #  Part of the tidyverse
                       "adegenet",
@@ -40,11 +40,15 @@ list.of.packages <- c("pegas",
                       "tidyselect",        #  Part of the tidyverse
                       "geodata",
                       "tidyterra",
-                      "ggspatial")         #  Makes ggplot2 create north arrows or scale bars
+                      "ggspatial",
+                      "devtools")         #  Makes ggplot2 create north arrows or scale bars
 
 # List the new (not installed) packages and then if there are any, install them.
 renv::install(packages = c(list.of.packages), 
               rebuild = FALSE) # try changing to TRUE if you're having package troubles
+devtools::install_github("https://github.com/thibautjombart/apex",
+                        force = FALSE)
+
 ##### 0.3 Load packages ####
 # Load all packages from the list specified above
 lapply(c(list.of.packages), 
@@ -211,7 +215,8 @@ outCombined <- dplyr::bind_cols(names(out_Zahl_1977), out_Zahl_1977, out_Shannon
     Species_name %in% c("Lasioglossum (Homalictus) ostridorsum", "Lasioglossum (Homalictus) kaicolo",  "Lasioglossum (Homalictus) hadrander", 
                         "Lasioglossum (Homalictus) groomi",  "Lasioglossum (Homalictus) fijiensis",   "Lasioglossum (Homalictus) concavus",  
                         "Lasioglossum (Homalictus) atritergus",  "Lasioglossum (Homalictus) sp. S",   "Lasioglossum (Homalictus) sp. F",  
-                        "Lasioglossum (Homalictus) sp. M",  "Lasioglossum (Homalictus) sp. R" ),
+                        "Lasioglossum (Homalictus) sp. M",  "Lasioglossum (Homalictus) sp. R",
+                        "Lasioglossum (Homalictus) sp. J" ),
     "Infected", "Unknown")) %>%
   dplyr::left_join(Chao1 %>% 
                      dplyr::select(species, Estimate) %>%

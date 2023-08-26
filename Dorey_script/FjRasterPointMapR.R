@@ -24,6 +24,7 @@ FjRasterPointMapR <- function(
     insetY = NULL,
     insetWidth = NULL, 
     insetHeight = NULL,
+    naMapCol = "grey",
     
     # OPTIONAL:
     # background points
