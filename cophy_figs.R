@@ -1,4 +1,4 @@
-##### required packages ####
+# This script was written by Elisha Freedman on the 20th of August 2023 to generate figures: 2 and S1. 
 library(phytools)
 library(ape)
 library(haplotypes)
