@@ -1,4 +1,7 @@
-# This script was written by Elisha Freedman on the 20th of August 2023 to generate figures: 2 and S1. 
+# This script was written by Elisha Freedman on the 20th of August 2023 to generate figures: 2 and S1 
+#for the manuscript titled "Widespread Wolbachia infection is correlated with increased mtDNA diversity in native bees across the Fijian archipelago."
+
+# packages
 library(phytools)
 library(ape)
 library(haplotypes)
