@@ -128,7 +128,7 @@ colnames(Fst_Homa) <- rownames(Fst_Homa)
   # Save output
 write.csv(Fst_Homa, paste0(RootPath, "/hierfstat_FST.csv"))
 
-#### 1.4 Diversity Indexces ####
+#### 1.4 Diversity Indices ####
   # Read in the sheet with the infected/not infected individuals (all tested)
 wolbachiaInfected = readr::read_csv("Wolbachia_PositiveNagative.csv")
 
@@ -309,7 +309,7 @@ outCombined_plot_Sampling <- outCombined_complete %>%
 
   # Statistic plot
 statPlot <- ggplot2::ggplot(outCombined_plot_Stats, 
-                            aes(x= name, y=value, fill=WolbachiaDetected)) + 
+                            ggplot2::aes(x= name, y=value, fill=WolbachiaDetected)) + 
   ggplot2::geom_boxplot() +
   ggplot2::xlab("") + ggplot2::ylab("Diversity/richness value") +
   ggplot2::theme(legend.position = "none",
@@ -475,10 +475,11 @@ WolTested <- matched %>%
                      dplyr::distinct(seqCode, .keep_all = TRUE),
                    by = c("Specimen_code" = "seqCode")) %>%
   dplyr::group_by(Species_name) %>%
-  dplyr::mutate(percentInfected = round((sum(WolbachiaPositive, na.rm = TRUE)/dplyr::n())*100, 0) ,
+  dplyr::mutate(percentInfected = round((sum(WolbachiaPositive, na.rm = TRUE)/dplyr::n())*100, 0),
+                wolbachiaSequences = sum(WolbachiaPositive, na.rm = TRUE),
                 sampleSize = dplyr::n()) %>%
   dplyr::distinct(Species_name, .keep_all = TRUE) %>% 
-  dplyr::select(Species_name, percentInfected, sampleSize) %>%
+  dplyr::select(Species_name, percentInfected, sampleSize, wolbachiaSequences) %>%
   # Merge with statistics
   dplyr::left_join(outCombined_complete, by = "Species_name")
 
@@ -766,6 +767,36 @@ FjPointMapR(
 
 
   
-  
+  #### 3.0 Table manipulation ####
+CollectionData <- readr::read_csv("HomalictusCollectionData_2018.csv")
+
+wolSeqNames <- readr::read_csv("wolbachiaSpecies.csv") %>%
+  dplyr::distinct()
+
+wolPosNeg <- readr::read_csv("Wolbachia_PositiveNagative.csv")
+
+# Combine
+TEST <- CollectionData %>%
+  dplyr::left_join(wolSeqNames, by = c("Specimen_code" = "homaSp") ) %>%
+  dplyr::left_join(wolPosNeg, by = c("Specimen_code" = "seqCode")) %>%
+  dplyr::select(!WolSequencID) %>%
+  dplyr::distinct() %>%
+  dplyr::mutate(individualCount = 1) %>%
+  dplyr::rename(
+    recordNumber = Specimen_code,
+    elevationInMeters = Elevation,
+    decimalLatitude	= Latitude,
+    decimalLongitude = Longitude,
+    locality = Location,
+    recordedBy = Collectors,
+    eventDate = Date,
+    eventTime = Time,
+    yeay = Year,
+    sex = Sex,
+    fieldNotes = Notes,
+    scientificName = Species_name) %>%
+  dplyr::mutate(eventDate = eventDate %>%
+                  lubridate::dmy()) %>%
+  readr::write_excel_csv("OccData.csv") 
 
 
