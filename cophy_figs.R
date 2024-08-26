@@ -2,6 +2,11 @@
 #for the manuscript titled "Widespread Wolbachia infection is correlated with increased mtDNA diversity in native bees across the Fijian archipelago."
 
 # packages
+if (!require("BiocManager", quietly = TRUE))
+  install.packages("BiocManager")
+
+BiocManager::install("treeio")
+
 library(phytools)
 library(ape)
 library(haplotypes)
@@ -161,7 +166,8 @@ host_nodes <- get_node_nums(tree = host_phylo_td, treedata = host_td)
 coldata <- read.csv("/Users/freed/Documents/GitHub/Honours/Dorey_script/HomalictusCollectionData_2018.csv")
 
 #### associations ####
-
+  # Specimen_code probably == recordNumber
+  # Species_name == scientificName
 assocs <- coldata[coldata$Specimen_code %in% wol_phylo$tip.label, c("Specimen_code", "Species_name")]
 
 # clade conversion for species M
