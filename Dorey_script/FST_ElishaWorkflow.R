@@ -85,15 +85,17 @@ matched <- OccData %>%
   dplyr::arrange(rownum)
 
   # Add the species names and codes to the genind object
-strata(FjHoma_genInd) <- matched %>% 
-    # select wanted columns
-  dplyr::select(Specimen_code, Species_name) %>%
+adegenet::strata(FjHoma_genInd) <- matched %>% 
     # Make new tibble with this info
   dplyr::rename(
-    sequence = Specimen_code,
-    populations = Species_name) %>%
+    sequence = recordNumber,
+    populations = scientificName) %>%
   dplyr::mutate(species = populations) %>%
+  dplyr::filter(Sequence_name %in% rownames(FjHoma_genInd$tab)) %>% 
+  # select wanted columns
+  dplyr::select(sequence, populations, species) %>%
   data.frame()
+
 setPop(FjHoma_genInd) <- ~populations
 
   ###### a. Filter sample size ####
@@ -130,18 +132,26 @@ write.csv(Fst_Homa, paste0(RootPath, "/hierfstat_FST.csv"))
 
 #### 1.4 Diversity Indices ####
   # Read in the sheet with the infected/not infected individuals (all tested)
-wolbachiaInfected = readr::read_csv("Wolbachia_PositiveNagative.csv")
+wolbachiaInfected <- readr::read_csv("Wolbachia_PositiveNagative.csv") %>%
+  dplyr::left_join(OccData %>% dplyr::select(c("recordNumber", "scientificName")),
+                   by = c("seqCode" = "recordNumber")) %>% 
+  dplyr::group_by(scientificName) %>%
+  dplyr::mutate(percentInfected = round((sum(WolbachiaPositive, na.rm = TRUE)/dplyr::n())*100, 0),
+                percentInfected = dplyr::if_else(is.na(scientificName), NA, percentInfected),
+                numScreened = dplyr::n(),
+                numScreened = dplyr::if_else(is.na(scientificName), NA, numScreened)
+                ) 
 
 
   ###### a. calculate ####
 # Use the genetic information in the matched dataframe to get haplotype statistics
 FJHoma_haplotypes <- matched %>%
     # !!! OPTIONAL filter to ONLY Wolbachia individuals
-  #dplyr::filter(Specimen_code %in% wolbachiaInfected$seqCode) %>%
+  #dplyr::filter(recordNumber %in% wolbachiaInfected$seqCode) %>%
     # Group by species name
-   # !!! OPTIONAL remove fijiensis
-  #dplyr::filter(!Species_name == "Lasioglossum (Homalictus) fijiensis") %>%
-  dplyr::group_by(Species_name) %>%
+   # !!! OPTIONAL remove fijiense
+  #dplyr::filter(!scientificName == "Lasioglossum (Homalictus) fijiense") %>%
+  dplyr::group_by(scientificName) %>%
     # Get counts of each haplotype
   dplyr::count(Sequence) %>% 
     # remove the Sequence column as it's not needed for the stats
@@ -149,7 +159,7 @@ FJHoma_haplotypes <- matched %>%
     # Add row numbers to make them unique
   mutate(row = row_number()) %>%
     # Pivot the tible wider so that each species has it's own column with haplotype counts
-  tidyr::pivot_wider(names_from = Species_name,
+  tidyr::pivot_wider(names_from = scientificName,
                      values_from = n,
                      values_fill = 0) 
   
@@ -192,37 +202,40 @@ Chao1 <- ChaoResults$diversityTable %>% dplyr::filter(Name == "Chao1 (Chao, 1984
   # Combine the statistics
 outCombined <- dplyr::bind_cols(names(out_Zahl_1977), out_Zahl_1977, out_Shannon_1949) %>%
     # Set the column names
-  setNames(c("Species_name", "Zahl", "Shannon")) %>%
+  setNames(c("scientificName", "Zahl", "Shannon")) %>%
     # Remove the "row" statistic 
-  dplyr::filter(!Species_name == "row") %>%
+  dplyr::filter(!scientificName == "row") %>%
     # Add haplotype counts
   dplyr::left_join(matched %>%
                      # Group by species name
-                     dplyr::group_by(Species_name) %>%
+                     dplyr::group_by(scientificName) %>%
                      dplyr::distinct(Sequence, .keep_all = TRUE) %>%
                      # Get counts of each haplotype
                      dplyr::count(., name = "haplotypeCount"),
-                   by = "Species_name") %>%
+                   by = "scientificName") %>%
    # Add sequence counts
   dplyr::left_join(matched %>%
                      # Group by species name
-                     dplyr::group_by(Species_name) %>%
+                     dplyr::group_by(scientificName) %>%
                      # Get counts of each haplotype
                      dplyr::count(name = "sequenceCount"),
-                   by = "Species_name") %>%
+                   by = "scientificName") %>%
     # Add Wolbachia infection status
   dplyr::mutate(WolbachiaDetected = dplyr::if_else(
-    Species_name %in% c("Lasioglossum (Homalictus) ostridorsum", "Lasioglossum (Homalictus) kaicolo",  "Lasioglossum (Homalictus) hadrander", 
-                        "Lasioglossum (Homalictus) groomi",  "Lasioglossum (Homalictus) fijiensis",   "Lasioglossum (Homalictus) concavus",  
-                        "Lasioglossum (Homalictus) atritergus",  "Lasioglossum (Homalictus) sp. S",   "Lasioglossum (Homalictus) sp. F",  
-                        "Lasioglossum (Homalictus) sp. M",  "Lasioglossum (Homalictus) sp. R",
-                        "Lasioglossum (Homalictus) sp. J" ),
-    "Infected", "Unknown")) %>%
+    stringr::str_detect(scientificName,
+                        c("ostridorsum|kaicolo|hadrander|groomi|fijiense|concavus|atritergus|sp. S|sp. F|sp. M|sp. R|sp. J"))
+    ,
+    "Infected", dplyr::if_else(stringr::str_detect(scientificName,
+                                                   c("nadarivatu|terminalis|sp. G|tuiwawae|sp. D")),
+    
+    "wsp-negative","Unknown"))) %>%
+  dplyr::mutate(WolbachiaDetected = factor(WolbachiaDetected, levels = c("Infected","wsp-negative",
+                                                                         "Unknown"))) %>% 
   dplyr::left_join(Chao1 %>% 
                      dplyr::select(species, Estimate) %>%
                      dplyr::rename(ChaoEstimate = Estimate) %>%
                      dplyr::mutate(log_ChaoEstimate = log(ChaoEstimate)),
-                   by = c("Species_name" = "species"))
+                   by = c("scientificName" = "species"))
 
 outCombined_longer <- outCombined %>%
   dplyr::select(!c("haplotypeCount","sequenceCount")) %>%
@@ -238,7 +251,7 @@ outCombined_longer <- outCombined %>%
   
   ###### b. diversity plots ####
 (diversityPlot <- ggplot2::ggplot(outCombined_longer, aes(fill=name, y=value, 
-                                        x= reorder(Species_name, value, decreasing = TRUE))) + 
+                                        x= reorder(scientificName, value, decreasing = TRUE))) + 
   ggplot2::geom_bar(position="dodge", stat="identity") +
   ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust=1))+
   ggplot2::xlab("Species") + ggplot2::ylab("Statistic value") +
@@ -262,9 +275,9 @@ shapiro.test(outCombined_complete$sequenceCount)
 
   # Get subsets of Unknown and Infected data
 UnknownDF <- outCombined_complete %>%
-  dplyr::filter(WolbachiaDetected == "Unknown")
+  dplyr::filter(WolbachiaDetected %in% c("Unknown","wsp-negative"))
 InfectedDF <- outCombined_complete %>%
-  dplyr::filter(WolbachiaDetected == "Infected")
+  dplyr::filter(WolbachiaDetected %in% c("Infected"))
 
   # Calculate p-values
     # Wilcoxon rank sum test (equivalent to the Mann-Whitney test: see the Note) is carried out
@@ -316,7 +329,7 @@ statPlot <- ggplot2::ggplot(outCombined_plot_Stats,
                  panel.background = ggplot2::element_rect(fill = "transparent",
                                                           colour = "black",
                                                           linetype = NULL)) +
-  ggplot2::scale_fill_manual(values = c("#E97777", "#82AAE3")) +
+  ggplot2::scale_fill_manual(values = c("#E97777", "#82AAE3","grey")) +
   ggplot2::scale_x_discrete(limits = c("Zahl", "Shannon", "log_ChaoEstimate"),
                             labels = c("Zahl", "Shannon", "log(Chao)"))
 # Sampling plot
@@ -327,7 +340,7 @@ samplePlot <- ggplot2::ggplot(outCombined_plot_Sampling, aes(x= name, y= log(val
                  panel.background = ggplot2::element_rect(fill = "transparent",
                                                           colour = "black",
                                                           linetype = NULL))+
-  ggplot2::scale_fill_manual(values = c("#E97777", "#82AAE3"))
+  ggplot2::scale_fill_manual(values = c("#E97777", "#82AAE3","grey"))
   # Legend
 legendPlot <- ggplot2::ggplot(outCombined_complete %>% 
                   dplyr::mutate(rowNum = row_number()) %>%
@@ -341,8 +354,8 @@ legendPlot <- ggplot2::ggplot(outCombined_complete %>%
                                                           colour = "black",
                                                           linetype = NULL)) +
   ggplot2::scale_fill_manual(name = "Infection status", 
-                             values = c("#E97777", "#82AAE3"),
-                             labels = c("Infected", "Unknown"))
+                             values = c("#E97777", "#82AAE3","grey"),
+                             labels = c("Infected", "wsp-negative", "Unknown"))
   # Combine and save
 cowplot::plot_grid(statPlot, samplePlot, cowplot::get_legend(legendPlot), ncol = 3,
                    rel_widths = c(2, 2, 1), labels = c("a", "b", "")) %>%
@@ -353,17 +366,26 @@ cowplot::plot_grid(statPlot, samplePlot, cowplot::get_legend(legendPlot), ncol =
 ###### e. linear models ####
 install.packages("Rfit")
 # Linear models
-# Zahl
+# Zahl 
 Zahl_lm <- Rfit::rfit(formula = Zahl ~ haplotypeCount + sequenceCount + WolbachiaDetected, 
-                      data = outCombined)
-summary(Zahl_lm)
+                      data = outCombined %>%
+                      dplyr::mutate(WolbachiaDetected = factor(WolbachiaDetected, levels = c("Unknown",
+                                                                                             "Infected","wsp-negative"
+                                                                                             ))) )
+Rfit::summary.rfit(Zahl_lm)
 # Shannon
 Shannon_lm <- Rfit::rfit(formula = Shannon ~ haplotypeCount + sequenceCount + WolbachiaDetected, 
-                         data = outCombined)
+                         data = outCombined %>%
+                           dplyr::mutate(WolbachiaDetected = factor(WolbachiaDetected, levels = c("Unknown",
+                                                                                                  "Infected","wsp-negative"
+                           ))) )
 summary(Shannon_lm)
 # Chao
 Chao_lm <- Rfit::rfit(formula = ChaoEstimate ~ haplotypeCount + sequenceCount + WolbachiaDetected, 
-                      data = outCombined)
+                      data = outCombined %>%
+                        dplyr::mutate(WolbachiaDetected = factor(WolbachiaDetected, levels = c("Unknown",
+                                                                                               "Infected","wsp-negative"
+                        ))))
 summary(Chao_lm)
 
 
@@ -373,8 +395,8 @@ summary(Chao_lm)
     ggplot2::geom_point(aes(colour = WolbachiaDetected)) +                                # scatter plot, coloured by sex
     ggplot2::labs(x = "Haplotype count", y = "Zahl") +
     ggplot2::stat_smooth(method = "lm", aes(fill = WolbachiaDetected, colour = WolbachiaDetected)) +    # adding regression lines for each sex
-    ggplot2::scale_colour_manual(values = c("#FFC125", "#36648B")) +
-    ggplot2::scale_fill_manual(values = c("#FFC125", "#36648B")) +
+    ggplot2::scale_colour_manual(values = c("#FFC125", "#36648B", "grey")) +
+    ggplot2::scale_fill_manual(values = c("#FFC125", "#36648B", "grey")) +
     ggplot2::theme(legend.position = c(0.2,0.8),
                    panel.background = ggplot2::element_rect(fill = "transparent",
                                                             colour = "black",
@@ -383,8 +405,8 @@ summary(Chao_lm)
     ggplot2::geom_point(aes(colour = WolbachiaDetected)) +                                # scatter plot, coloured by sex
     ggplot2::labs(x = "Sequence count", y = "Zahl") +
     ggplot2::stat_smooth(method = "lm", aes(fill = WolbachiaDetected, colour = WolbachiaDetected)) +    # adding regression lines for each sex
-    ggplot2::scale_colour_manual(values = c("#FFC125", "#36648B")) +
-    ggplot2::scale_fill_manual(values = c("#FFC125", "#36648B")) +
+    ggplot2::scale_colour_manual(values = c("#FFC125", "#36648B", "grey")) +
+    ggplot2::scale_fill_manual(values = c("#FFC125", "#36648B", "grey")) +
     ggplot2::theme(legend.position = "none",
                    panel.background = ggplot2::element_rect(fill = "transparent",
                                                             colour = "black",
@@ -396,8 +418,8 @@ summary(Chao_lm)
     ggplot2::geom_point(aes(colour = WolbachiaDetected)) +                                # scatter plot, coloured by sex
     ggplot2::labs(x = "Haplotype count", y = "Shannon") +
     ggplot2::stat_smooth(method = "lm", aes(fill = WolbachiaDetected, colour = WolbachiaDetected)) +    # adding regression lines for each sex
-    ggplot2::scale_colour_manual(values = c("#FFC125", "#36648B")) +
-    ggplot2::scale_fill_manual(values = c("#FFC125", "#36648B")) +
+    ggplot2::scale_colour_manual(values = c("#FFC125", "#36648B","grey")) +
+    ggplot2::scale_fill_manual(values = c("#FFC125", "#36648B","grey")) +
     ggplot2::theme(legend.position = "none",
                    panel.background = ggplot2::element_rect(fill = "transparent",
                                                             colour = "black",
@@ -406,8 +428,8 @@ summary(Chao_lm)
     ggplot2::geom_point(aes(colour = WolbachiaDetected)) +                                # scatter plot, coloured by sex
     ggplot2::labs(x = "Sequence count", y = "Shannon") +
     ggplot2::stat_smooth(method = "lm", aes(fill = WolbachiaDetected, colour = WolbachiaDetected)) +    # adding regression lines for each sex
-    ggplot2::scale_colour_manual(values = c("#FFC125", "#36648B")) +
-    ggplot2::scale_fill_manual(values = c("#FFC125", "#36648B")) +
+    ggplot2::scale_colour_manual(values = c("#FFC125", "#36648B","grey")) +
+    ggplot2::scale_fill_manual(values = c("#FFC125", "#36648B","grey")) +
     ggplot2::theme(legend.position = "none",
                    panel.background = ggplot2::element_rect(fill = "transparent",
                                                             colour = "black",
@@ -418,8 +440,8 @@ summary(Chao_lm)
     ggplot2::geom_point(aes(colour = WolbachiaDetected)) +                                # scatter plot, coloured by sex
     ggplot2::labs(x = "Haplotype count", y = "ChaoEstimate") +
     ggplot2::stat_smooth(method = "lm", aes(fill = WolbachiaDetected, colour = WolbachiaDetected)) +    # adding regression lines for each sex
-    ggplot2::scale_colour_manual(values = c("#FFC125", "#36648B")) +
-    ggplot2::scale_fill_manual(values = c("#FFC125", "#36648B")) +
+    ggplot2::scale_colour_manual(values = c("#FFC125", "#36648B","grey")) +
+    ggplot2::scale_fill_manual(values = c("#FFC125", "#36648B","grey")) +
     ggplot2::theme(legend.position = "none",
                    panel.background = ggplot2::element_rect(fill = "transparent",
                                                             colour = "black",
@@ -428,8 +450,8 @@ summary(Chao_lm)
     ggplot2::geom_point(aes(colour = WolbachiaDetected)) +                                # scatter plot, coloured by sex
     ggplot2::labs(x = "Sequence count", y = "ChaoEstimate") +
     ggplot2::stat_smooth(method = "lm", aes(fill = WolbachiaDetected, colour = WolbachiaDetected)) +    # adding regression lines for each sex
-    ggplot2::scale_colour_manual(values = c("#FFC125", "#36648B")) +
-    ggplot2::scale_fill_manual(values = c("#FFC125", "#36648B")) +
+    ggplot2::scale_colour_manual(values = c("#FFC125", "#36648B","grey")) +
+    ggplot2::scale_fill_manual(values = c("#FFC125", "#36648B","grey")) +
     ggplot2::theme(legend.position = "none",
                    panel.background = ggplot2::element_rect(fill = "transparent",
                                                             colour = "black",
@@ -464,38 +486,48 @@ cowplot::plot_grid(Zahl_haplo, Zahl_sequence,
 ###### f. explore Wolbachia infections ####
 # Find wolbachia-tested species
 wolTestedSp <- matched %>% 
-  dplyr::filter(Specimen_code %in% wolbachiaInfected$seqCode) %>%
-  dplyr::distinct(Species_name)
+  dplyr::filter(recordNumber %in% wolbachiaInfected$seqCode) %>%
+  dplyr::distinct(scientificName)
 
 
 WolTested <- matched %>%
+  dplyr::select(!tidyselect::any_of("WolbachiaPositive")) %>% 
   # !!! OPTIONAL filter to ONLY Wolbachia individuals
-  #dplyr::filter(Specimen_code %in% wolbachiaInfected$seqCode) %>%
+  #dplyr::filter(recordNumber %in% wolbachiaInfected$seqCode) %>%
   dplyr::left_join(wolbachiaInfected %>%
+                     dplyr::ungroup() %>%
+                     dplyr::select(WolSequencID, seqCode, WolbachiaPositive,
+                                   percentInfected, numScreened) %>%
                      dplyr::distinct(seqCode, .keep_all = TRUE),
-                   by = c("Specimen_code" = "seqCode")) %>%
-  dplyr::group_by(Species_name) %>%
-  dplyr::mutate(percentInfected = round((sum(WolbachiaPositive, na.rm = TRUE)/dplyr::n())*100, 0),
-                wolbachiaSequences = sum(WolbachiaPositive, na.rm = TRUE),
+                   by = c("recordNumber" = "seqCode")) %>%
+  dplyr::arrange(percentInfected ) %>%
+  dplyr::group_by(scientificName) %>%
+  tidyr::fill(percentInfected, numScreened, .direction = "down") %>%
+  dplyr::mutate(wolbachiaSequences = sum(WolbachiaPositive, na.rm = TRUE),
                 sampleSize = dplyr::n()) %>%
-  dplyr::distinct(Species_name, .keep_all = TRUE) %>% 
-  dplyr::select(Species_name, percentInfected, sampleSize, wolbachiaSequences) %>%
+  dplyr::filter(dplyr::row_number() == 1) %>% 
+  dplyr::select(scientificName, percentInfected, sampleSize, wolbachiaSequences, numScreened) %>%
+  dplyr::mutate(WolbachiaDetected = dplyr::if_else(wolbachiaSequences > 0,
+                                                   "Infected", dplyr::if_else(
+                                                     complete.cases(numScreened),
+                                                     "wsp-negative", "Unknown"
+                                                   ))) %>% 
   # Merge with statistics
-  dplyr::left_join(outCombined_complete, by = "Species_name")
+  dplyr::left_join(outCombined_complete %>% dplyr::select(!WolbachiaDetected), by = "scientificName")
 
 # Get species with n >= 3 and ONLY for wolbachia-tested species
 WolTested_3 <- WolTested %>%
   dplyr::filter(sampleSize > 2) %>%
-  dplyr::filter(Species_name %in% wolTestedSp$Species_name)
+  dplyr::filter(scientificName %in% wolTestedSp$scientificName)
 
 # infection and sample size + richness
 infection_lm <- Rfit::rfit(formula = percentInfected ~ sampleSize + ChaoEstimate, 
-                      data = WolTested)
+                      data = WolTested_3)
 summary(infection_lm)
 
 # infection and diversity + richness
 infectionDiv_lm <- Rfit::rfit(formula = percentInfected ~ Zahl + ChaoEstimate, 
-                           data = WolTested)
+                           data = WolTested_3)
 summary(infectionDiv_lm)
 
 shapiro.test( WolTested_3$percentInfected)
@@ -527,35 +559,42 @@ cor.test(x= DivRich$Zahl, y = DivRich$ChaoEstimate, method = "spearm",
          data = DivRich, alternative = "two.sided")
 # Diversity and richness
 DivRich_lm <- Rfit::rfit(formula = Zahl ~ ChaoEstimate + WolbachiaDetected, 
-                         data = DivRich)
+                         data = DivRich %>%
+                           dplyr::mutate(WolbachiaDetected = factor(WolbachiaDetected, levels = c(
+                             "Unknown", "Infected","wsp-negative"))))
 summary(DivRich_lm)
 
+DivRich <- DivRich %>%
+  dplyr::mutate(WolbachiaDetected = factor(WolbachiaDetected, levels = c("Infected",
+                                                                            "wsp-negative",
+                                                                            "Unknown")))
+
   # Plot pattern
-(DivRich_fijiensis <- ggplot2::ggplot(DivRich, aes(x = ChaoEstimate, y = Zahl)) +
+(DivRich_fijiense <- ggplot2::ggplot(DivRich, aes(x = ChaoEstimate, y = Zahl)) +
     ggplot2::geom_point(aes(colour = WolbachiaDetected)) +                                # scatter plot, coloured by sex
     ggplot2::labs(x = "Chao Estimate", y = "Zahl") +
     ggplot2::stat_smooth(method = "lm", formula = y ~ log(x),
                          aes(fill = WolbachiaDetected, colour = WolbachiaDetected)) +    # adding regression lines for each sex
-    ggplot2::scale_colour_manual(values = c("#FFC125", "#36648B")) +
-    ggplot2::scale_fill_manual(values = c("#FFC125", "#36648B")) +
+    ggplot2::scale_colour_manual(values = c("#FFC125", "#36648B", "grey")) +
+    ggplot2::scale_fill_manual(values = c("#FFC125", "#36648B", "grey")) +
     ggplot2::theme(legend.position = c(0.2,0.9),
                    panel.background = ggplot2::element_rect(fill = "transparent",
                                                             colour = "black",
                                                             linetype = NULL)) ) 
-(DivRich_noFijiensis <- ggplot2::ggplot(DivRich %>%
-                                          dplyr::filter(!stringr::str_detect(Species_name, "fijiensis")),
+(DivRich_nofijiense <- ggplot2::ggplot(DivRich %>%
+                                          dplyr::filter(!stringr::str_detect(scientificName, "fijiense")),
                                         aes(x = ChaoEstimate, y = Zahl)) +
     ggplot2::geom_point(aes(colour = WolbachiaDetected)) +                                # scatter plot, coloured by sex
     ggplot2::labs(x = "Chao Estimate", y = "Zahl") +
     ggplot2::stat_smooth(method = "lm", formula = y ~ log(x), 
                          aes(fill = WolbachiaDetected, colour = WolbachiaDetected)) +    # adding regression lines for each sex
-    ggplot2::scale_colour_manual(values = c("#FFC125", "#36648B")) +
-    ggplot2::scale_fill_manual(values = c("#FFC125", "#36648B")) +
+    ggplot2::scale_colour_manual(values = c("#FFC125", "#36648B", "grey")) +
+    ggplot2::scale_fill_manual(values = c("#FFC125", "#36648B", "grey")) +
     ggplot2::theme(legend.position = "none",
                    panel.background = ggplot2::element_rect(fill = "transparent",
                                                             colour = "black",
                                                             linetype = NULL)) ) 
-cowplot::plot_grid(DivRich_fijiensis, DivRich_noFijiensis,
+cowplot::plot_grid(DivRich_fijiense, DivRich_nofijiense,
                    #cowplot::get_legend(legendPlot_DivRich),
                    ncol = 2, labels = c("a", "b")) %>%
   cowplot::save_plot(filename = "DivRich.pdf", plot = ., 
@@ -570,17 +609,20 @@ cowplot::plot_grid(DivRich_fijiensis, DivRich_noFijiensis,
   ##### 2.1 prepare data ####
 # Read in the occurrence data
 OccData <- readr::read_csv(paste0(RootPath, "/HomalictusCollectionData_2018.csv"),
-                           col_types = readr::cols(.default = "c")) %>%
-  dplyr::rename(
-    decimalLongitude = Longitude,
-    decimalLatitude = Latitude)
+                           col_types = readr::cols(.default = "c")) 
 wolbachiaSpecies = readr::read_csv("wolbachiaSpecies.csv")
 
 
 # Create the points file
 fijiPoints <- OccData %>% 
-  dplyr::mutate(wolStatus = dplyr::if_else(Specimen_code %in% wolbachiaSpecies$homaSp,
-                                           "Infected", "Unknown")) %>%
+  dplyr::mutate(wolStatus = dplyr::if_else(WolbachiaPositive == TRUE,
+                                           "Infected", dplyr::if_else(
+                                             WolbachiaPositive == FALSE,
+                                             "wsp-negative", "Unknown"
+                                           )),
+                wolStatus = dplyr::if_else(is.na(wolStatus), "Unknown", wolStatus)) %>% 
+  #dplyr::mutate(wolStatus = dplyr::if_else(recordNumber %in% wolbachiaSpecies$homaSp,
+  #                                         "Infected", "Unknown")) %>%
   tidyr::drop_na(c(decimalLongitude, decimalLatitude)) %>%
   dplyr::mutate(decimalLongitude = as.numeric(decimalLongitude),
                 decimalLatitude = as.numeric(decimalLatitude)) %>%
@@ -618,7 +660,8 @@ FjRasterPointMapR(
   ptSize = 1.5,
   pchAll = 19,
      # background point and wolbachia point oclours
-    colPts = "black",
+    colPts = "grey50",
+    colNegative = "black",
     colWol = "white",
   # Raster colours
   naMapCol = "aliceblue",
@@ -627,35 +670,35 @@ FjRasterPointMapR(
   colourDirection = -1,
   # point alpha (opacity)
   mapAlpha = 0.8,
-  mapTitle = "Fijian Homalictus occurrences")
+  mapTitle = expression(paste("Fijian ", italic("Lasioglossum"), " occurrences")))
 
 ##### 2.3 Convex hulls ####
   ###### a. get areas ####
   # Make a vector of each species name
-fijiSpecies <- unique(fijiPoints$Species_name)
+fijiSpecies <- unique(fijiPoints$scientificName)
   # Create an empty tibble
-loopTibble <- tibble::tibble(Species_name = NA_character_,
+loopTibble <- tibble::tibble(scientificName = NA_character_,
                              polygonArea_m2 = NA_integer_)
 
-for(i in 1:length(unique(fijiPoints$Species_name))){
+for(i in 1:length(unique(fijiPoints$scientificName))){
     # select the points for the ith species
   sp_i <- fijiPoints %>%
-    dplyr::filter(Species_name == fijiSpecies[[i]])
+    dplyr::filter(scientificName == fijiSpecies[[i]])
     # Get the polygon area for that species
   polygonArea_i <- sf::st_convex_hull(sp_i %>% sf::st_union()) %>% sf::st_area() %>%
     as.double()
     # add to loop tibble
   loopTibble <- loopTibble %>%
-    dplyr::bind_rows( tibble::tibble(Species_name = fijiSpecies[[i]],
+    dplyr::bind_rows( tibble::tibble(scientificName = fijiSpecies[[i]],
                                      polygonArea_m2 = polygonArea_i/1000000))
 }# Finish loop
 
 
   ###### b. combine data ####
 areaPlus <- WolTested %>%
-  dplyr::left_join(loopTibble, by = "Species_name") %>%
+  dplyr::left_join(loopTibble, by = "scientificName") %>%
     # select only wolbachia-tested species
-  dplyr::filter(Species_name %in% wolTestedSp$Species_name)
+  dplyr::filter(scientificName %in% wolTestedSp$scientificName)
 
   ###### c. run tests ####
   # Test area normality _ NOT normal
@@ -682,7 +725,8 @@ areaInfRate_lm <- Rfit::rfit(formula = percentInfected ~ ChaoEstimate + Zahl + p
 summary(areaInfRate_lm)
 # area and sample richness, diversity
 areaDivRich_lm <- Rfit::rfit(formula = polygonArea_m2 ~ ChaoEstimate + Zahl + WolbachiaDetected, 
-                             data = areaPlus)
+                             data = areaPlus %>%
+                               dplyr::mutate(WolbachiaDetected = factor(WolbachiaDetected, levels = c("wsp-negative","Infected"))) )
 summary(areaDivRich_lm)
 
 
@@ -694,8 +738,8 @@ source(paste0(RootPath, "/FjPointMapR.R"))
 FjPointMapR(
   mapData = OccData %>%
       # Remove NA species
-    dplyr::filter(!is.na(Species_name)),
-  #spColours = rep("black", length(unique(OccData$Species_name))),
+    dplyr::filter(!is.na(scientificName)),
+  #spColours = rep("black", length(unique(OccData$scientificName))),
   filename = "FijiHoma_Species.pdf",
   outpath = RootPath,
   width = 16, height = 7, units = "in",
@@ -719,7 +763,7 @@ FjPointMapR(
   
   # OPTIONAL:
   speciesName = NULL,
-  nameColumn = "Species_name",
+  nameColumn = "scientificName",
   mapAlpha = 0.5,
   mapTitle = "Fijian Homalictus occurrences",
   # Jitter map? enter jitter amount
@@ -733,8 +777,8 @@ source(paste0(RootPath, "/FjPointMapR.R"))
 FjPointMapR(
   mapData = OccData %>%
     # Remove NA species
-    dplyr::filter(!is.na(Species_name)),
-  #spColours = rep("black", length(unique(OccData$Species_name))),
+    dplyr::filter(!is.na(scientificName)),
+  #spColours = rep("black", length(unique(OccData$scientificName))),
   filename = "FijiHoma_noSpecies.pdf",
   outpath = RootPath,
   width = 7, height = 7, units = "in",
@@ -777,13 +821,13 @@ wolPosNeg <- readr::read_csv("Wolbachia_PositiveNagative.csv")
 
 # Combine
 TEST <- CollectionData %>%
-  dplyr::left_join(wolSeqNames, by = c("Specimen_code" = "homaSp") ) %>%
-  dplyr::left_join(wolPosNeg, by = c("Specimen_code" = "seqCode")) %>%
+  dplyr::left_join(wolSeqNames, by = c("recordNumber" = "homaSp") ) %>%
+  dplyr::left_join(wolPosNeg, by = c("recordNumber" = "seqCode")) %>%
   dplyr::select(!WolSequencID) %>%
   dplyr::distinct() %>%
   dplyr::mutate(individualCount = 1) %>%
   dplyr::rename(
-    recordNumber = Specimen_code,
+    recordNumber = recordNumber,
     elevationInMeters = Elevation,
     decimalLatitude	= Latitude,
     decimalLongitude = Longitude,
@@ -794,7 +838,7 @@ TEST <- CollectionData %>%
     yeay = Year,
     sex = Sex,
     fieldNotes = Notes,
-    scientificName = Species_name) %>%
+    scientificName = scientificName) %>%
   dplyr::mutate(eventDate = eventDate %>%
                   lubridate::dmy()) %>%
   readr::write_excel_csv("OccData.csv") 

@@ -30,6 +30,7 @@ FjRasterPointMapR <- function(
     # background points
   ringPts = "black",
   colPts = "#bebada",
+  colNegative = "grey",
   pchAll = 19,
 # Wolbachia Points
   ringWol = "white",
@@ -131,7 +132,7 @@ FjRasterPointMapR <- function(
   mapData <- mapData %>%
     dplyr::arrange(wolStatus %>% desc()) %>%
     dplyr::mutate(wolStatus = wolStatus %>% 
-                    factor(levels = c("Unknown", "Infected"),
+                    factor(levels = c("Unknown", "wsp-negative", "Infected"),
                            ordered = TRUE))
   
   #### 2.0 Map ####
@@ -150,9 +151,12 @@ FjRasterPointMapR <- function(
     geom_sf(data = mapData, aes(colour = factor(wolStatus)),
             #mapping = aes(x = "decimalLongitude", y = "decimalLatitude"),
             alpha = mapAlpha, size = ptSize, shape = pchAll) +
-     scale_color_manual("Wolbachia status", values = c(colWol,colPts),
-                        breaks = c("Infected", "Unknown"),
-                        labels = c("Infected", "Unknown")) +
+     scale_color_manual(expression(paste(italic("Wolbachia"), " status")), 
+                        values = c(colWol, colNegative, colPts),
+                        breaks = c("Infected","wsp-negative", "Unknown"),
+                        labels = c("Infected", 
+                                   expression(paste(italic("wsp"), "-negative")),
+                                   "Unknown")) +
     # scale_shape_manual(values = c(pchPts, pchWol)) +
     # Map formatting
     # Add in the map's north arrow

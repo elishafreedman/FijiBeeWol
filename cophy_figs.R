@@ -2,6 +2,11 @@
 #for the manuscript titled "Widespread Wolbachia infection is correlated with increased mtDNA diversity in native bees across the Fijian archipelago."
 
 # packages
+if (!require("BiocManager", quietly = TRUE))
+  install.packages("BiocManager")
+
+BiocManager::install("treeio")
+
 library(phytools)
 library(ape)
 library(haplotypes)
@@ -171,6 +176,7 @@ host_drop <- host_phylo$tip.label[!stringr::str_detect(host_phylo$tip.label, "17
                                    !stringr::str_detect(host_phylo$tip.label, "CM_")]
 host_keep <-  c("17FJ127", "17FJ210", "17FJ98", "CM_182", "17FJ217", "17FJ213", "17FJ27")
 
+
 host_drop_t <- host_phylo$tip.label[!host_phylo$tip.label %in% host_keep &
                                     !host_phylo$tip.label %in% host_drop]
 
@@ -179,7 +185,7 @@ host_phylo_td <- drop.tip(host_phylo, wol_drop_t,
                           rooted = FALSE,
                           collapse.singles = TRUE)
 # small tree associations
-coldata <- read.csv("/Users/freed/Documents/GitHub/Honours/Dorey_script/HomalictusCollectionData_2018.csv")
+coldata <- read.csv("/Users/freed/Documents/GitHub/Honours/Dorey_script/HomalictusCollectionData_2018.csv")                 
 assocs <- coldata[coldata$Specimen_code %in% wol_phylo$tip.label, c("Specimen_code", "Species_name")]
 
 cophy_small <- cophylo(wol_phylo_td, host_phylo_td,
