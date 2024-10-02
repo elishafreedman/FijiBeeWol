@@ -1,4 +1,4 @@
-# This script was written by Elisha Freedman on the 20th of August 2023 to generate figures: 2 and S1 
+# This script was written by Elisha Freedman on the 20th of August 2023 to generate figures: 2 and S1
 #for the manuscript titled "Widespread Wolbachia infection is correlated with increased mtDNA diversity in native bees across the Fijian archipelago."
 
 # packages
@@ -19,19 +19,25 @@ library(seqinr)
 library(tidyverse)
 
 ##### functions ####
-make_phylo_class <- function(treedata = hosttree, sigfig = 2){
+make_phylo_class <- function(treedata = hosttree, sigfig = 2, rev = FALSE){
 
   d <- treedata@data[["posterior"]]
   tree <- list(edge =  treedata@phylo[["edge"]],
                Nnode = treedata@phylo[["Nnode"]],
                tip.label = treedata@phylo[["tip.label"]],
                edge.length = treedata@phylo[["edge.length"]],
-               node.label = na.omit(round(
-                 as.numeric(d), sigfig)))
+               edge.label = treedata@phylo[["edge.label"]],
+               d = treedata@data[["posterior"]],
+                 node.label = round(
+                 as.numeric(d), sigfig))
+  if(rev == TRUE){
+    tree$node.label = rev(tree$node.label)
+  } else{
+    tree$node.label == tree$node.label
+  }
   class(tree) <- "phylo"
   return(tree)
 }
-
 
 
 get_node_nums <- function(tree,
@@ -104,14 +110,14 @@ colour_links <-
 ##### load files #####
 # woltree without specimens
 woltree_nspec <- treeio::read.beast(
-  "/Users/freed/Documents/PhD_local_files/honours/cophylogeny/MCca_comb10%_fjWol_r.trees")
-#woltree with specimen names
-woltree_spec <- treeio::read.beast(
-  "/Users/freed/Documents/PhD_local_files/honours/cophylogeny/MCca_comb10%_fjWol.trees")
+   "/data/Fixed_nodePriors.tree")
 
-woltree_spec@phylo[["tip.label"]]<- woltree_spec@phylo[["tip.label"]] %>%
+
+
+woltree_nspec@phylo[["tip.label"]]<- woltree_nspec@phylo[["tip.label"]] %>%
   stringr::str_remove_all(., "wol") %>%
   stringr::str_remove_all(., "_") %>%
+  stringr::str_remove_all(., " ") %>%
   stringr::str_replace_all(., "J0", "J") %>%
   stringr::str_replace_all(.,"fJ", "FJ") %>%
   stringr::str_remove_all(., "Consensus") %>%
@@ -119,208 +125,77 @@ woltree_spec@phylo[["tip.label"]]<- woltree_spec@phylo[["tip.label"]] %>%
   stringr::str_replace_all(., "cm", "CM_") %>%
   stringr::str_replace_all(., "H1051", "yCMR48_A06") %>%
   stringr::str_replace_all(., "HL054", "yCMR51_D06") %>%
-  stringr::str_replace_all(., "HL455", "yCMR29_F03")
+  stringr::str_replace_all(., "HL455", "yCMR29_F03") %>%
+  stringr::str_remove_all(., "reversed")
 
-wol_phylo <- make_phylo_class(woltree_spec)
+wol_phylo <- make_phylo_class(woltree_nspec)
 
-wol_nodes <- get_node_nums(wol_phylo, woltree_spec)
+wol_phylo[tip.label]
+
+
+wol_nodes <- get_node_nums(wol_phylo, woltree_nspec)
 
 # hostree
 hosttree <- treeio::read.beast(
-  "/Users/freed/Documents/PhD_local_files/honours/cophylogeny/MCCA_EF1a2_COI2nd_nameChange.nex")
+  "/data/CA10%_wbBees.tree")
 
-# rename tree
 hosttree@phylo[["tip.label"]]<-
   hosttree@phylo[["tip.label"]] %>%
   stringr::str_replace_all(., "Homalictus_",
                            "Lasioglossum (Homalictus) ") %>%
   stringr::str_replace_all(., "sp_", "sp. ") %>%
-  stringr::str_remove_all(., "_a")
+  stringr::str_remove_all(., "_a") %>%
+  stringr::str_remove_all(., "reversed") %>%
+  stringr::str_remove_all(., "_")
 
 host_phylo <- make_phylo_class(hosttree)
-host_td<- drop.tip(object = hosttree,
-                   tip = c("Lasioglossum (Homalictus) spNov_CdS_2",
-                                        "Lasioglossum (Homalictus) ostridorsum_b",
-                                        "Lasioglossum (Homalictus) tuiwawae_b" ,
-                                        "Lasioglossum (Homalictus) tuiwawae_c",
-                                        "Phantom_sp",
-                                        "Lasioglossum (Homalictus) spNov_CdS_1",
-                                        "Lasioglossum (Homalictus) fijiensis_b",
-                                        "Homolictus_van_Levu_sp. CM25"),
-                          trim.internal = TRUE,
-                          rooted = FALSE,
-                          collapse.singles = TRUE
-                          )
-
-host_phylo_td <- make_phylo_class(host_td)
-host_nodes <- get_node_nums(tree = host_phylo_td, treedata = host_td)
-
-
-
-
-
-
-
-# sampling data
-
-coldata <- read.csv("/Users/freed/Documents/GitHub/Honours/Dorey_script/HomalictusCollectionData_2018.csv")
-
-#### associations ####
-  # Specimen_code probably == recordNumber
-  # Species_name == scientificName
-assocs <- coldata[coldata$Specimen_code %in% wol_phylo$tip.label, c("Specimen_code", "Species_name")]
-
-# clade conversion for species M
-
-assocs$Species_name[which(assocs$Species_name
-             == "Lasioglossum (Homalictus) sp. M")] <-
-  "Lasioglossum (Homalictus) atritergus"
-assocs$Species_name[which(assocs$Species_name
-                          == "Lasioglossum (Homalictus) sp. R")] <-
-  "Lasioglossum (Homalictus) concavus"
-##### cophylogeny ####
-
-cophy <- cophylo(wol_phylo, host_phylo_td,
-                 assoc = assocs,
-                 rotate = FALSE)
-# quick check
-setEPS()
-pdf("cophy_rough.pdf", width = 50, height = 50)
-plot(cophy, fsize = 3)
-nodelabels.cophylo(which="left")
-nodelabels.cophylo(which="right")
-dev.off()
-#  wol strains
-
-# supergroup
-cols <- colour_branches(tree = cophy,
-                        col_l = c("orangered",
-                                    "blue"),
-                        col_r = NULL,
-                        node_l_left = c(227, 129),
-                        node_l_right = NULL)
-
-# strains
-
-links <- colour_links(tree = cophy,
-                      names_from = cophy$assoc$Specimen_code,
-
-                      names = c("CM_182",
-                                "17FJ98",
-                                "17FJ210",
-                                "17FJ127"
-                                ),
-                      colours = c("#882255",
-                                  "forestgreen",
-                                  "goldenrod1",
-                                  "slateblue"),
-                      main_col = "grey")
-
-setEPS()
-pdf("cophy.pdf", width = 50, height = 80)
-plot(cophy,
-  lwd = 4,
-  link.type = "curved",
-  link.col = links,
-  edge.col= cols,
-  link.lty = "solid",
-  link.lwd = 6,
-  fsize = 3,
-  use.edge.length = TRUE,
-  align.tip.label = TRUE
-)
-
-
-# add posteriors
-
-nodelabels.cophylo(cophy$trees[[1]]$node.label,
-                   node = wol_nodes,
-                     Ntip(cophy$trees[[1]]),
-                   frame = "none",
-                   adj = c(1, 1),
-                   which = "left",
-                   cex = 3
-)
-
-
-nodelabels.cophylo(cophy$trees[[2]]$node.label,
-                    node = host_nodes,
-                     Ntip(cophy$trees[[2]]),
-                   frame = "none",
-                   adj = c(1, 1),
-                   which = "right",
-                   cex = 3
-)
-
-
-dev.off()
-
 
 ##### smaller tree #####
 
-# use same host tree
-
+#### small host tree
 # tipdrop woltree
 
 wol_drop <- wol_phylo$tip.label[!stringr::str_detect(wol_phylo$tip.label, "17FJ") &
                 !stringr::str_detect(wol_phylo$tip.label, "CM_")]
-wol_keep <-  c("17FJ127", "17FJ210", "17FJ98", "CM_182")
+wol_keep <-  c("17FJ127", "17FJ210", "17FJ98", "CM_182", "17FJ217", "17FJ213", "17FJ27")
 
 
 wol_drop_t <- wol_phylo$tip.label[!wol_phylo$tip.label %in% wol_keep &
                                     !wol_phylo$tip.label %in% wol_drop]
 
 
-wol_td<- drop.tip(woltree_spec, wol_drop_t,
+wol_phylo_td<- drop.tip(wol_phylo, wol_drop_t,
                    trim.internal = TRUE,
                    rooted = FALSE,
                    collapse.singles = TRUE
 )
 
-wol_phylo_td <- make_phylo_class(wol_td)
-wol_nodes_col <- get_node_nums(tree = wol_phylo_td, treedata = wol_td)
+
+# hosttree
+host_drop <- host_phylo$tip.label[!stringr::str_detect(host_phylo$tip.label, "17FJ") &
+                                   !stringr::str_detect(host_phylo$tip.label, "CM_")]
+host_keep <-  c("17FJ127", "17FJ210", "17FJ98", "CM_182", "17FJ217", "17FJ213", "17FJ27")
 
 
+host_drop_t <- host_phylo$tip.label[!host_phylo$tip.label %in% host_keep &
+                                    !host_phylo$tip.label %in% host_drop]
+
+host_phylo_td <- drop.tip(host_phylo, wol_drop_t,
+                          trim.internal = TRUE,
+                          rooted = FALSE,
+                          collapse.singles = TRUE)
 # small tree associations
+coldata <- read.csv("/Users/freed/Documents/GitHub/Honours/Dorey_script/HomalictusCollectionData_2018.csv")                 
+assocs <- coldata[coldata$Specimen_code %in% wol_phylo$tip.label, c("Specimen_code", "Species_name")]
 
-assoc_col <- assocs[assocs$Specimen_code %in% wol_keep,]
-
-wHa_assocs <- data.frame(Specimen_code = rep("wHa", 10),
-                         Species_name = c("Lasioglossum (Homalictus) hadrander",
-                                          " Lasioglossum (Homalictus) kaicolo",
-                                          "Lasioglossum (Homalictus) ostridorsum",
-                                          "Lasioglossum (Homalictus) sp. S",
-                                          "Lasioglossum (Homalictus) concavus",
-                                          "Lasioglossum (Homalictus) groomi",
-                                          "Lasioglossum (Homalictus) sp. F",
-                                          "Lasioglossum (Homalictus) sp. J",
-                                          "Lasioglossum (Homalictus) atritergus",
-                                          "Lasioglossum (Homalictus) fijiensis"
-
-
-                         ))
-assoc_col <- rbind(assoc_col, wHa_assocs)
-
-# change name of strains
-wol_phylo_td$tip.label[wol_phylo_td$tip.label == "17FJ127"] <- "wFJA"
-wol_phylo_td$tip.label[wol_phylo_td$tip.label == "17FJ210"] <- "wFJBa"
-wol_phylo_td$tip.label[wol_phylo_td$tip.label == "17FJ98"] <- "wFJBb"
-wol_phylo_td$tip.label[wol_phylo_td$tip.label == "CM_182"] <- "wFJBc"
-
-# change name of strains
-assoc_col[assoc_col$Specimen_code == "17FJ127",1] <- "wFJA"
-assoc_col[assoc_col$Specimen_code == "17FJ210",1] <- "wFJBa"
-assoc_col[assoc_col$Specimen_code == "17FJ98",1] <- "wFJBb"
-assoc_col[assoc_col$Specimen_code == "CM_182",1] <- "wFJBc"
-
-cophy_col <- cophylo(wol_phylo_td, host_phylo_td,
-                 assoc = assoc_col,
-                 rotate = FALSE)
-# quick check
+cophy_small <- cophylo(wol_phylo_td, host_phylo_td,
+                 assoc = assocs,
+                 rotate = TRUE)
 # quick check
 setEPS()
-pdf("cophy_col_rough.pdf", width = 50, height = 50)
-plot(cophy_col, fsize = 3)
+pdf("/Users/freed/Documents/wol_paper versions/wol_paper_new_analysis/cophy_rough.pdf",
+    width = 50, height = 50)
+phytools::plot(cophy_small, fsize = 3)
 nodelabels.cophylo(which="left")
 nodelabels.cophylo(which="right")
 dev.off()
@@ -351,7 +226,7 @@ links_col <- colour_links(tree = cophy_col,
                       main_col = "grey")
 
 setEPS()
-pdf("cophy_col.pdf", width = 40, height = 40)
+pdf("/Users/freed/Documents/wol_paper versions/wol_paper_new_analysis/cophy_col.pdf", width = 40, height = 40)
 plot(cophy_col,
      lwd = 4,
      link.type = "curved",
@@ -388,3 +263,81 @@ nodelabels.cophylo(cophy_col$trees[[2]]$node.label,
 
 
 dev.off()
+
+#### large tree ###
+
+host_phylo$tip.label <- host_phylo$tip.label %>%
+  stringr::str_remove_all(., "reversed") %>%
+  stringr::str_remove_all(., "_") %>%
+  trimws()
+
+woltree_nspec$tip.label <- woltree_nspec$tip.label %>%
+  stringr::str_remove_all(., "reversed") %>%
+  stringr::str_remove_all(., "_")
+
+large_cophy<-cophylo(woltree_nspec, host_phylo,
+                     rotate=TRUE)
+setEPS()
+pdf("/Users/freed/Documents/wol_paper versions/wol_paper_new_analysis/cophy_rough.pdf", width = 50, height = 50)
+plot(large_cophy, fsize = 3)
+nodelabels.cophylo(which="left")
+nodelabels.cophylo(which="right")
+dev.off()
+
+
+cols <- colour_branches(tree = large_cophy,
+                        col_l = c("orangered",
+                                  "blue"),
+                        col_r = NULL,
+                        node_l_left = c(156, 129),
+                        node_l_right = NULL)
+
+links <- colour_links(tree = large_cophy,
+                      names_from = large_cophy$assoc[,1],
+
+                      names = c("CM182",
+                                "17FJ98",
+                                "17FJ210",
+                                "17FJ127"
+                      ),
+                      colours = c("#882255",
+                                  "forestgreen",
+                                  "goldenrod1",
+                                  "slateblue"),
+                      main_col = "grey")
+
+setEPS()
+pdf("/Users/freed/Documents/wol_paper versions/wol_paper_new_analysis/large_cophy_curved.pdf", width = 50, height = 80)
+plot(large_cophy,
+     lwd = 4,
+     link.type = "curved",
+     link.col = links,
+     edge.col= cols,
+     link.lty = "solid",
+     link.lwd = 6,
+     fsize = 3,
+     use.edge.length = TRUE,
+     align.tip.label = TRUE,
+     rotate = TRUE
+)
+
+
+nodelabels.cophylo(
+  large_cophy$trees[[1]]$node.label[2:Nnode(large_cophy$trees[[1]])],
+  2:Nnode(large_cophy$trees[[1]]) + Ntip(large_cophy$trees[[1]]),
+  frame = "none",
+  cex = 3,
+  adj = c(1,1),
+  which = "left"
+)
+nodelabels.cophylo(
+  large_cophy$trees[[2]]$node.label[2:Nnode(large_cophy$trees[[2]])],
+  2:Nnode(large_cophy$trees[[2]]) + Ntip(large_cophy$trees[[2]]),
+  frame = "none",
+  cex = 3,
+  adj = c(1, 1),
+  which = "right"
+)
+
+dev.off()
+
